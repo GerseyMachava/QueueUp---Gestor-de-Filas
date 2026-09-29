@@ -1,0 +1,17 @@
+services:
+    mysql:
+        image: mysql:5.7
+        container_name: QueueUpDB
+        restart: unless-stopped
+        environment:
+            MYSQL_DATABASE: QUEUEUP_DATABASE
+            MYSQL_USER: ${DB_USERNAME:?Defina DB_USERNAME no arquivo .env como usuario diferente de root}
+            MYSQL_PASSWORD: ${DB_PASSWORD:?Defina DB_PASSWORD no arquivo .env}
+            MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?Defina DB_ROOT_PASSWORD no arquivo .env}
+        ports:
+            - "3306:3306"
+        volumes:
+            - mysql_data:/var/lib/mysql
+volumes:
+    mysql_data:
+
