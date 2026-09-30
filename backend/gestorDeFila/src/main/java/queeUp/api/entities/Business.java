@@ -1,4 +1,4 @@
-package queeUp.api.entities;
+package queeup.api.entities;
 
 import java.util.List;
 
@@ -13,8 +13,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import queeUp.api.entities.base.BaseEntity;
-import queeUp.api.entities.enums.BusinessType;
+import queeup.api.entities.base.BaseEntity;
+import queeup.api.entities.enums.BusinessType;
 
 @Entity
 @AllArgsConstructor
@@ -36,4 +36,6 @@ public class Business extends BaseEntity {
 
     @OneToMany(mappedBy = "business")
     private List<User> users;
+    @OneToMany(mappedBy = "business")
+    private List<Category> categories;
 }

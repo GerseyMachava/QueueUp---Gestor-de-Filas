@@ -1,4 +1,4 @@
-package queeUp.api.entities.base;
+package queeup.api.entities.base;
 
 import java.time.LocalDateTime;
 
