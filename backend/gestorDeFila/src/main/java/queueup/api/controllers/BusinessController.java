@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.data.domain.Sort;
@@ -37,15 +38,25 @@ public class BusinessController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<BusinessResponseDto>> create(
-            BusinessRequestDto requestDto) {
+            @RequestBody BusinessRequestDto requestDto) {
+                System.out.println("name: " + requestDto.name());
         return ResponseEntity
                 .ok(ApiResponse.success("Business created", service.createBusiness(requestDto), HttpStatus.OK));
+    }
+    @PostMapping("/teste")
+    public ResponseEntity<String> teste(
+            BusinessRequestDto requestDto) {
+                System.out.println("address: " + requestDto.address());
+                return ResponseEntity
+                .ok(requestDto.name());
+                
+        
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<BusinessResponseDto>> update(
             @PathVariable Long id,
-            BusinessRequestDto requestDto) {
+           @RequestBody BusinessRequestDto requestDto) {
         return ResponseEntity
                 .ok(ApiResponse.success("Business updated", service.updateBusiness(requestDto, id), HttpStatus.OK));
     }
