@@ -1,7 +1,6 @@
 package queueup.api.repositories;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.domain.Pageable;
@@ -51,7 +50,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 								ELSE 1
 						END, t.createdAt ASC
 						""")
-		Optional<Ticket> findNextWaitingTicketByBusinessAndCategory(
+		List<Ticket> findNextWaitingTicketByBusinessAndCategory(
 						@Param("businessId") Long businessId,
 						@Param("categoryId") Long categoryId,
 						Pageable pageable);
