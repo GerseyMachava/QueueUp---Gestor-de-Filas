@@ -1,4 +1,4 @@
-package queeup.api.entities;
+package queueup.api.entities;
 
 import java.util.List;
 
@@ -13,8 +13,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import queeup.api.entities.base.BaseEntity;
-import queeup.api.entities.enums.BusinessType;
+import queueup.api.entities.base.BaseEntity;
+import queueup.api.entities.enums.BusinessType;
 
 @Entity
 @AllArgsConstructor

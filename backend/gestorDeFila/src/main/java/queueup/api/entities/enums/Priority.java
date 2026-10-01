@@ -1,4 +1,4 @@
-package queeup.api.entities.enums;
+package queueup.api.entities.enums;
 
 public enum Priority {
     NORMAL, PRIORITY

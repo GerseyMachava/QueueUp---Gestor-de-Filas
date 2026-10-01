@@ -1,6 +1,4 @@
-package queeup.api.entities;
-
-import java.time.LocalDateTime;
+package queueup.api.entities;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -15,28 +13,26 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import queeup.api.entities.base.BaseEntity;
-import queeup.api.entities.enums.Channel;
-import queeup.api.entities.enums.DeliveryStatus;
+import queueup.api.entities.base.BaseEntity;
+import queueup.api.entities.enums.Priority;
 
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "notifications")
+@Table(name = "categories")
 @SuperBuilder
-public class Notification extends BaseEntity {
+public class Category extends BaseEntity {
 
-    @Column(nullable = false)
+    @Column (nullable =false)
+    private String name;
     @Enumerated(EnumType.STRING)
-    private Channel channel;
-    @Enumerated(EnumType.STRING)
-    private DeliveryStatus status;
-    private LocalDateTime sentAt;
+    private Priority defaultPriority;
+    private int averageServiceTimeMinutes;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ticket_id", nullable = false)
-    private Ticket ticket;
+    @JoinColumn(name = "business_id", nullable = false)
+    private Business business;
 
 }

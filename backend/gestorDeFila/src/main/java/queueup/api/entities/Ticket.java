@@ -1,4 +1,4 @@
-package queeup.api.entities;
+package queueup.api.entities;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,9 +17,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
-import queeup.api.entities.base.BaseEntity;
-import queeup.api.entities.enums.Priority;
-import queeup.api.entities.enums.Status;
+import queueup.api.entities.base.BaseEntity;
+import queueup.api.entities.enums.Priority;
+import queueup.api.entities.enums.Status;
 
 @Entity
 @AllArgsConstructor
