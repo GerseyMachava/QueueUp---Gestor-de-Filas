@@ -26,7 +26,7 @@ import queueup.api.entities.enums.Status;
 @NoArgsConstructor
 @Getter
 @Setter
-@Table(name = "users")
+@Table(name = "tickets")
 @SuperBuilder
 public class Ticket extends BaseEntity {
     @Column(nullable = false)

@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS business (
+CREATE TABLE IF NOT EXISTS businesses (
     id BIGINT NOT NULL AUTO_INCREMENT,
     name VARCHAR(255) NOT NULL,
     `type` ENUM('FAST_FOOD', 'SALON', 'CLINIC', 'BANK', 'OTHER') NOT NULL,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS users (
     CONSTRAINT pk_users PRIMARY KEY (id),
     CONSTRAINT uk_users_email UNIQUE (email),
     CONSTRAINT fk_users_business FOREIGN KEY (business_id)
-        REFERENCES business (id) ON DELETE CASCADE,
+        REFERENCES businesses (id) ON DELETE CASCADE,
     INDEX idx_users_business_id (business_id)
 ) ENGINE=InnoDB;
 
@@ -32,7 +32,7 @@ CREATE TABLE IF NOT EXISTS categories (
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT pk_categories PRIMARY KEY (id),
     CONSTRAINT fk_categories_business FOREIGN KEY (business_id)
-        REFERENCES business (id) ON DELETE CASCADE,
+        REFERENCES businesses (id) ON DELETE CASCADE,
     INDEX idx_categories_business_id (business_id)
 ) ENGINE=InnoDB;
 
@@ -51,7 +51,7 @@ CREATE TABLE IF NOT EXISTS tickets (
     finished_at TIMESTAMP NULL,
     CONSTRAINT pk_tickets PRIMARY KEY (id),
     CONSTRAINT fk_tickets_business FOREIGN KEY (business_id)
-        REFERENCES business (id) ON DELETE CASCADE,
+        REFERENCES businesses (id) ON DELETE CASCADE,
     CONSTRAINT fk_tickets_category FOREIGN KEY (category_id)
         REFERENCES categories (id) ON DELETE RESTRICT,
     INDEX idx_tickets_business_id (business_id),
