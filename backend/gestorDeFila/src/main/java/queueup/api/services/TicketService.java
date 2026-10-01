@@ -16,7 +16,9 @@ public class TicketService {
     private final UserRepository userRepository;
     private final TicketRepository ticketRepository;
     
-
+// TODO: proteger contra race condition — dois registros simultâneos podem calcular
+// o mesmo nextTicketNumber antes de qualquer um salvar. Resolver com tabela de
+// sequência dedicada ou constraint UNIQUE + retry.
         public String generateTicketNumber(Category category) {
         LocalDate today = LocalDate.now();
         int nextTicketNumber = ticketRepository.calculateNextTicketNumber(

@@ -1,4 +1,4 @@
-package queueup.api.dtos.requests;
+package queueup.api.dtos.responses;
 
 public record TicketResponseDto() {
 
