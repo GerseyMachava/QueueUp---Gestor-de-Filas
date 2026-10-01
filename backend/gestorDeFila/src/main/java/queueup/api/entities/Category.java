@@ -35,4 +35,7 @@ public class Category extends BaseEntity {
     @JoinColumn(name = "business_id", nullable = false)
     private Business business;
 
+    @Column(nullable = false)
+    private String prefix;
+
 }

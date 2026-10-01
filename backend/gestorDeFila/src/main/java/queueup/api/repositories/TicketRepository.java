@@ -1,5 +1,6 @@
 package queueup.api.repositories;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -54,5 +55,17 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 						@Param("businessId") Long businessId,
 						@Param("categoryId") Long categoryId,
 						Pageable pageable);
+		
+		/*calcular o próximo número contando os tickets existentes daquele business+category+dia (COUNT(*) + 1), */
+		@Query("""
+				SELECT COUNT(t) + 1 FROM Ticket t
+				WHERE t.business.id = :businessId
+					AND t.category.id = :categoryId
+					AND FUNCTION('DATE', t.createdAt) = :today
+				""")
+		int calculateNextTicketNumber(
+				@Param("businessId") Long businessId,
+				@Param("categoryId") Long categoryId,
+				@Param("today") LocalDate today);
 
 }
