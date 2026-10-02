@@ -39,24 +39,14 @@ public class BusinessController {
     @PostMapping
     public ResponseEntity<ApiResponse<BusinessResponseDto>> create(
             @RequestBody BusinessRequestDto requestDto) {
-                System.out.println("name: " + requestDto.name());
         return ResponseEntity
                 .ok(ApiResponse.success("Business created", service.createBusiness(requestDto), HttpStatus.OK));
-    }
-    @PostMapping("/teste")
-    public ResponseEntity<String> teste(
-            BusinessRequestDto requestDto) {
-                System.out.println("address: " + requestDto.address());
-                return ResponseEntity
-                .ok(requestDto.name());
-                
-        
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<BusinessResponseDto>> update(
             @PathVariable Long id,
-           @RequestBody BusinessRequestDto requestDto) {
+            @RequestBody BusinessRequestDto requestDto) {
         return ResponseEntity
                 .ok(ApiResponse.success("Business updated", service.updateBusiness(requestDto, id), HttpStatus.OK));
     }
@@ -67,11 +57,10 @@ public class BusinessController {
         return ResponseEntity.ok(ApiResponse.success("Business fetched", service.getBusinessById(id), HttpStatus.OK));
     }
 
-    @DeleteMapping ("/{id}") 
+    @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> delete(
-        @PathVariable Long id
-          ) { 
-            service.deleteBusiness(id);
-        return ResponseEntity.ok(ApiResponse.success("Business fetched", "", HttpStatus.OK));
+            @PathVariable Long id) {
+        service.deleteBusiness(id);
+        return ResponseEntity.ok(ApiResponse.success("Business deleted", "", HttpStatus.OK));
     }
 }

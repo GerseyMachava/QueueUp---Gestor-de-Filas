@@ -51,4 +51,9 @@ public class BusinessService {
                 .orElseThrow(() -> new RuntimeException("business not found with this id " + id));
         businessRepository.delete(business);
     }
+
+    protected Business returnBusinessEntityById(Long id) {
+        return businessRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("business not found with this id " + id));
+    }
 }
