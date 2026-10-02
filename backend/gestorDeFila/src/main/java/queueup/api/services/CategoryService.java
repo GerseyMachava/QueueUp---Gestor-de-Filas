@@ -11,6 +11,7 @@ import queueup.api.entities.Business;
 import queueup.api.entities.Category;
 import queueup.api.mappers.CategoryMapper;
 import queueup.api.repositories.CategoryRepository;
+import queueup.api.shared.exceptions.ResourceNotFoundException;
 
 @Service
 @AllArgsConstructor
@@ -20,7 +21,7 @@ public class CategoryService {
     private final CategoryMapper mapper;
 
     private void validateCategory(CategoryRequestDto requestDto) {
-
+        // TODO: B3 — implementar validações
     }
 
     public CategoryResponseDto createCategory(CategoryRequestDto requestDto) {
@@ -33,7 +34,7 @@ public class CategoryService {
         validateCategory(requestDto);
         Business business = businessService.returnBusinessEntityById(requestDto.businessId());
         Category existingCategory = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found with this id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with this id " + id));
         mapper.updateEntityFromRequestDto(requestDto, existingCategory, business);
         return mapper.toResponseDto(categoryRepository.save(existingCategory));
     }
@@ -44,15 +45,13 @@ public class CategoryService {
 
     public CategoryResponseDto getCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found with this id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with this id " + id));
         return mapper.toResponseDto(category);
     }
 
-        public void deleteCategory(Long id) {
-         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Category not found with this id " + id));
+    public void deleteCategory(Long id) {
+        Category category = categoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with this id " + id));
         categoryRepository.delete(category);
     }
-
-
 }
