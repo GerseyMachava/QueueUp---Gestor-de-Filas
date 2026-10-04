@@ -18,6 +18,8 @@ import queueup.api.repositories.CategoryRepository;
 import queueup.api.repositories.TicketRepository;
 import queueup.api.repositories.UserRepository;
 import queueup.api.shared.exceptions.ResourceNotFoundException;
+import queueup.api.shared.util.EnumUtils;
+
 
 @Service
 @AllArgsConstructor
@@ -38,15 +40,15 @@ public class TicketService {
         int nextTicketNumber = ticketRepository.calculateNextTicketNumber(
                 category.getBusiness().getId(),
                 category.getId(),
-                today
-        );
+                today);
         return String.format("%s%03d", category.getPrefix(), nextTicketNumber);
     }
 
     public TicketResponseDto createTicket(TicketRequestDto requestDto) {
         validateTicket(requestDto);
         Category category = categoryRepository.findById(requestDto.categoryId())
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with this id " + requestDto.categoryId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Category not found with this id " + requestDto.categoryId()));
         String ticketNumber = generateTicketNumber(category);
         Ticket ticket = mapper.toEntity(requestDto, category, ticketNumber);
         return mapper.toResponseDto(ticketRepository.save(ticket));
@@ -57,7 +59,8 @@ public class TicketService {
         Ticket existingTicket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with this id " + id));
 
-        // categoryId do request é ignorado — ticket não troca de categoria/business (multi-tenancy)
+        // categoryId do request é ignorado — ticket não troca de categoria/business
+        // (multi-tenancy)
         mapper.updateEntityFromRequestDto(requestDto, existingTicket);
         applyStatusTransition(existingTicket, requestDto.status());
 
@@ -68,7 +71,7 @@ public class TicketService {
         if (newStatus == null || newStatus.isBlank()) {
             return;
         }
-        Status status = Enum.valueOf(Status.class, newStatus);
+        Status status = EnumUtils.parse(Status.class, newStatus, "status");
         LocalDateTime now = LocalDateTime.now();
 
         if (status == Status.CALLED && ticket.getCalledAt() == null) {

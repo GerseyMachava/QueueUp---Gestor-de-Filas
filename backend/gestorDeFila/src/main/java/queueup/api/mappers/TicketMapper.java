@@ -11,6 +11,7 @@ import queueup.api.entities.Category;
 import queueup.api.entities.Ticket;
 import queueup.api.entities.enums.Priority;
 import queueup.api.entities.enums.Status;
+import queueup.api.shared.util.EnumUtils;
 
 @Component
 @AllArgsConstructor
@@ -29,8 +30,7 @@ public class TicketMapper {
                 entity.getFinishedAt(),
                 entity.getBusiness().getId(),
                 entity.getCategory().getId(),
-                entity.getCategory().getName()
-        );
+                entity.getCategory().getName());
     }
 
     public Ticket toEntity(TicketRequestDto requestDto, Category category, String ticketNumber) {
@@ -38,7 +38,7 @@ public class TicketMapper {
                 .ticketNumber(ticketNumber)
                 .customerName(requestDto.customerName())
                 .customerContact(requestDto.customerContact())
-                .priority(Enum.valueOf(Priority.class, requestDto.priority()))
+                .priority(EnumUtils.parse(Priority.class, requestDto.priority(), "priority"))
                 .status(Status.WAITING)
                 .business(category.getBusiness())
                 .category(category)

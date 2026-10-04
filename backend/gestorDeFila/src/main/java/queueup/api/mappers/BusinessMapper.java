@@ -23,15 +23,15 @@ public class BusinessMapper {
         );
     }
 
-    public Business toEntity (BusinessRequestDto requestDto){
-        return  Business.builder()
-        .name(requestDto.name())
-        .address(requestDto.address())
-        .contact(requestDto.contact())
-        .type(Enum.valueOf(BusinessType.class, requestDto.type()))
-        .build();
-              
-}
+    public Business toEntity(BusinessRequestDto requestDto) {
+        return Business.builder()
+                .name(requestDto.name())
+                .address(requestDto.address())
+                .contact(requestDto.contact())
+                .type(Enum.valueOf(BusinessType.class, requestDto.type()))
+                .build();
+
+    }
 
     public void updateEntityFromRequestDto(BusinessRequestDto requestDto, Business existingEntity) {
         existingEntity.setName(requestDto.name());
@@ -43,7 +43,5 @@ public class BusinessMapper {
     public Page<BusinessResponseDto> toResponseDtoPage(Page<Business> entityPage) {
         return entityPage.map(this::toResponseDto);
     }
-
-
 
 }

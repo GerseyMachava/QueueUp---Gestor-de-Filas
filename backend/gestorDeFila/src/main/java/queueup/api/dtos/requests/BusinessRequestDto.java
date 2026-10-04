@@ -1,10 +1,13 @@
 package queueup.api.dtos.requests;
 
-public record BusinessRequestDto(
-    String name,
-    String address,
-    String contact,
-    String type
-) {
+import jakarta.validation.constraints.NotBlank;
 
+public record BusinessRequestDto(
+        @NotBlank(message = "The business name can not be null")
+        String name,
+        String address,
+        String contact,
+        @NotBlank(message = "The business type can not be null")
+        String type
+) {
 }

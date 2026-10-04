@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import queueup.api.dtos.requests.CategoryRequestDto;
 import queueup.api.dtos.responses.CategoryResponseDto;
@@ -39,7 +40,7 @@ public class CategoryController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<CategoryResponseDto>> create(
-            @RequestBody CategoryRequestDto requestDto) {
+             @Valid @RequestBody CategoryRequestDto requestDto) {
         return ResponseEntity
                 .ok(ApiResponse.success("Category created", service.createCategory(requestDto), HttpStatus.OK));
     }

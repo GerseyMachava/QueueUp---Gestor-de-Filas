@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import queueup.api.dtos.requests.TicketRequestDto;
 import queueup.api.dtos.responses.TicketResponseDto;
@@ -39,7 +40,7 @@ public class TicketController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<TicketResponseDto>> create(
-            @RequestBody TicketRequestDto requestDto) {
+             @Valid @RequestBody TicketRequestDto requestDto) {
         return ResponseEntity
                 .ok(ApiResponse.success("Ticket created", service.createTicket(requestDto), HttpStatus.OK));
     }
@@ -47,7 +48,7 @@ public class TicketController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TicketResponseDto>> update(
             @PathVariable Long id,
-            @RequestBody TicketRequestDto requestDto) {
+           @Valid   @RequestBody TicketRequestDto requestDto) {
         return ResponseEntity
                 .ok(ApiResponse.success("Ticket updated", service.updateTicket(requestDto, id), HttpStatus.OK));
     }

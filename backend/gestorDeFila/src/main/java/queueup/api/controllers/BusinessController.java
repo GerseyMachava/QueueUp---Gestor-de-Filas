@@ -13,6 +13,9 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import jakarta.validation.Valid;
+
 import org.springframework.data.domain.Sort;
 
 import lombok.AllArgsConstructor;
@@ -38,7 +41,7 @@ public class BusinessController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<BusinessResponseDto>> create(
-            @RequestBody BusinessRequestDto requestDto) {
+            @Valid @RequestBody BusinessRequestDto requestDto) {
         return ResponseEntity
                 .ok(ApiResponse.success("Business created", service.createBusiness(requestDto), HttpStatus.OK));
     }
@@ -46,7 +49,7 @@ public class BusinessController {
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<BusinessResponseDto>> update(
             @PathVariable Long id,
-            @RequestBody BusinessRequestDto requestDto) {
+            @Valid @RequestBody BusinessRequestDto requestDto) {
         return ResponseEntity
                 .ok(ApiResponse.success("Business updated", service.updateBusiness(requestDto, id), HttpStatus.OK));
     }
