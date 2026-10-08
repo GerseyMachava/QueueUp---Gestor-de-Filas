@@ -42,7 +42,7 @@ public class CategoryController {
     public ResponseEntity<ApiResponse<CategoryResponseDto>> create(
              @Valid @RequestBody CategoryRequestDto requestDto) {
         return ResponseEntity
-                .ok(ApiResponse.success("Category created", service.createCategory(requestDto), HttpStatus.OK));
+                .ok(ApiResponse.success("Category created", service.createCategory(requestDto), HttpStatus.CREATED));
     }
 
     @PutMapping("/{id}")

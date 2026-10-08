@@ -28,6 +28,7 @@ public class TicketMapper {
                 entity.getCalledAt(),
                 entity.getServedAt(),
                 entity.getFinishedAt(),
+                entity.getCreatedAt(),
                 entity.getBusiness().getId(),
                 entity.getCategory().getId(),
                 entity.getCategory().getName());

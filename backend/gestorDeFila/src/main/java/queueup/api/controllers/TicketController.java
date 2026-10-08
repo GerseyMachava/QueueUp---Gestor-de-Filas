@@ -1,6 +1,5 @@
 package queueup.api.controllers;
 
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -40,15 +39,15 @@ public class TicketController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<TicketResponseDto>> create(
-             @Valid @RequestBody TicketRequestDto requestDto) {
+            @Valid @RequestBody TicketRequestDto requestDto) {
         return ResponseEntity
-                .ok(ApiResponse.success("Ticket created", service.createTicket(requestDto), HttpStatus.OK));
+                .ok(ApiResponse.success("Ticket created", service.createTicket(requestDto), HttpStatus.CREATED));
     }
 
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<TicketResponseDto>> update(
             @PathVariable Long id,
-           @Valid   @RequestBody TicketRequestDto requestDto) {
+            @Valid @RequestBody TicketRequestDto requestDto) {
         return ResponseEntity
                 .ok(ApiResponse.success("Ticket updated", service.updateTicket(requestDto, id), HttpStatus.OK));
     }

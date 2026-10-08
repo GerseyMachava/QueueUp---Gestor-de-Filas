@@ -43,7 +43,7 @@ public class BusinessController {
     public ResponseEntity<ApiResponse<BusinessResponseDto>> create(
             @Valid @RequestBody BusinessRequestDto requestDto) {
         return ResponseEntity
-                .ok(ApiResponse.success("Business created", service.createBusiness(requestDto), HttpStatus.OK));
+                .ok(ApiResponse.success("Business created", service.createBusiness(requestDto), HttpStatus.CREATED));
     }
 
     @PutMapping("/{id}")

@@ -22,23 +22,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 								ELSE 1
 						END, t.createdAt ASC
 						""")
-		List<Ticket> findWaitingTicketsByBusinessAndCategory(
-						@Param("businessId") Long businessId,
-						@Param("categoryId") Long categoryId);
-
-		@Query("""
-						SELECT COUNT(t) FROM Ticket t, Ticket target
-						WHERE target.id = :ticketId
-							AND target.status = queueup.api.entities.enums.Status.WAITING
-							AND t.business = target.business
-							AND t.category = target.category
-							AND t.status = queueup.api.entities.enums.Status.WAITING
-							AND (
-									(t.priority = queueup.api.entities.enums.Priority.PRIORITY
-											AND target.priority = queueup.api.entities.enums.Priority.NORMAL)
-									OR (t.priority = target.priority AND t.createdAt < target.createdAt)
-							)
-						""")
 		long countWaitingTicketsAheadOf(@Param("ticketId") Long ticketId);
 
 		@Query("""

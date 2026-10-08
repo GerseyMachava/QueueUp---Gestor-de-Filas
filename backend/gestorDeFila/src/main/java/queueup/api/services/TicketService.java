@@ -20,12 +20,12 @@ import queueup.api.repositories.UserRepository;
 import queueup.api.shared.exceptions.ResourceNotFoundException;
 import queueup.api.shared.util.EnumUtils;
 
-
 @Service
 @AllArgsConstructor
 public class TicketService {
 
     private final UserRepository userRepository;
+    private static final String TICKET_NUMBER_FORMAT = "%s%03d";
     private final TicketRepository ticketRepository;
     private final CategoryRepository categoryRepository;
     private final TicketMapper mapper;
@@ -41,7 +41,7 @@ public class TicketService {
                 category.getBusiness().getId(),
                 category.getId(),
                 today);
-        return String.format("%s%03d", category.getPrefix(), nextTicketNumber);
+        return String.format(TICKET_NUMBER_FORMAT, category.getPrefix(), nextTicketNumber);
     }
 
     public TicketResponseDto createTicket(TicketRequestDto requestDto) {
