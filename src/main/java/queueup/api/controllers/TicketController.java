@@ -32,7 +32,7 @@ public class TicketController {
     @GetMapping
     public ResponseEntity<ApiResponse<Page<TicketResponseDto>>> index(
             @PageableDefault(sort = "ticketNumber", direction = Sort.Direction.ASC, size = 10) Pageable pageable) {
-        Page<TicketResponseDto> tickets = service.getAllTickets(pageable);
+        Page<TicketResponseDto> tickets = service.getAllBusinessTickets(pageable);
         String message = tickets.isEmpty() ? "No tickets found" : "tickets fetched";
         return ResponseEntity.ok(ApiResponse.success(message, tickets, HttpStatus.OK));
     }

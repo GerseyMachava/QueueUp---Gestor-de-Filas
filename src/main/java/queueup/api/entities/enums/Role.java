@@ -1,7 +1,7 @@
 package queueup.api.entities.enums;
 
 public enum Role {
-    ADMIN("admin"),  ATTENDANT("attendant");
+    ADMIN("admin"),  ATTENDANT("attendant"), SUPER_ADMIN("super_admin");
 
     private String role;
 
