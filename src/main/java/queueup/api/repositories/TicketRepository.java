@@ -60,5 +60,10 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
 	Optional<Ticket> findByIdAndBusinessId(Long id, Long businessId);
 
+	@Query("""
+			    SELECT t FROM Ticket t
+			    WHERE (:businessId IS NULL OR t.business.id = :businessId)
+			""")
+	Page<Ticket> findAllFilteredByBusiness(@Param("businessId") Long businessId, Pageable pageable);
 
 }

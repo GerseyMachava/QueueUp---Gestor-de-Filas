@@ -50,6 +50,7 @@ public class TicketService {
     private final CategoryRepository categoryRepository;
     private final TicketMapper mapper;
 
+
     public String generateTicketNumber(Category category) {
         LocalDate today = LocalDate.now();
         int nextTicketNumber = ticketRepository.calculateNextTicketNumber(
@@ -60,12 +61,11 @@ public class TicketService {
     }
 
     public TicketResponseDto createTicket(TicketRequestDto requestDto) {
-        Long businessId = authService.getLoggedInBusinessId();
-
-        Category category = categoryRepository.findByIdAndBusinessId(
-                requestDto.categoryId(), businessId)
+        Category category = categoryRepository.findById(requestDto.categoryId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Category not found with this id " + requestDto.categoryId()));
+
+        authService.ensureCanAccess(category.getBusiness().getId());
 
         return tryCreateWithRetry(requestDto, category, 0);
     }
@@ -77,7 +77,7 @@ public class TicketService {
         Ticket ticket = mapper.toEntity(requestDto, category, ticketNumber);
 
         try {
-            Ticket saved = ticketRepository.saveAndFlush (ticket);
+            Ticket saved = ticketRepository.saveAndFlush(ticket);
             if (attempt > 0) {
                 log.warn("Ticket number collision resolved on attempt {} (categoryId={}, businessId={})",
                         attempt, category.getId(), category.getBusiness().getId());
@@ -109,10 +109,10 @@ public class TicketService {
     }
 
     public TicketResponseDto updateTicket(TicketRequestDto requestDto, Long id) {
-        Long businessId = authService.getLoggedInBusinessId();
-
-        Ticket existingTicket = ticketRepository.findByIdAndBusinessId(id, businessId)
+        Ticket existingTicket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with this id " + id));
+
+        authService.ensureCanAccess(existingTicket.getBusiness().getId());
 
         validateStatusTransition(existingTicket, requestDto.status());
 
@@ -123,14 +123,12 @@ public class TicketService {
     }
 
     private void validateStatusTransition(Ticket existing, String newStatus) {
-        if (newStatus == null || newStatus.isBlank()) {
-            return;
-        }
+        if (newStatus == null || newStatus.isBlank()) return;
+
         Status current = existing.getStatus();
         Status next = EnumUtils.parse(Status.class, newStatus, "status");
 
-        if (current == next)
-            return;
+        if (current == next) return;
 
         Set<Status> allowed = ALLOWED_TRANSITIONS.getOrDefault(current, Set.of());
         if (!allowed.contains(next)) {
@@ -142,8 +140,7 @@ public class TicketService {
     }
 
     private void applyStatusTransition(Ticket ticket, String newStatus) {
-        if (newStatus == null || newStatus.isBlank())
-            return;
+        if (newStatus == null || newStatus.isBlank()) return;
 
         Status status = EnumUtils.parse(Status.class, newStatus, "status");
         LocalDateTime now = LocalDateTime.now();
@@ -155,46 +152,46 @@ public class TicketService {
         } else if (status == Status.CALLED) {
             ticket.setServedAt(null);
             ticket.setFinishedAt(null);
-            if (ticket.getCalledAt() == null)
-                ticket.setCalledAt(now);
+            if (ticket.getCalledAt() == null) ticket.setCalledAt(now);
         } else if (status == Status.IN_SERVICE) {
             ticket.setFinishedAt(null);
-            if (ticket.getCalledAt() == null)
-                ticket.setCalledAt(now);
-            if (ticket.getServedAt() == null)
-                ticket.setServedAt(now);
+            if (ticket.getCalledAt() == null) ticket.setCalledAt(now);
+            if (ticket.getServedAt() == null) ticket.setServedAt(now);
         } else if (status == Status.COMPLETED) {
-            if (ticket.getCalledAt() == null)
-                ticket.setCalledAt(now);
-            if (ticket.getServedAt() == null)
-                ticket.setServedAt(now);
-            if (ticket.getFinishedAt() == null)
-                ticket.setFinishedAt(now);
+            if (ticket.getCalledAt() == null) ticket.setCalledAt(now);
+            if (ticket.getServedAt() == null) ticket.setServedAt(now);
+            if (ticket.getFinishedAt() == null) ticket.setFinishedAt(now);
         } else if (status == Status.ABANDONED || status == Status.NO_SHOW) {
-            if (ticket.getFinishedAt() == null)
-                ticket.setFinishedAt(now);
+            if (ticket.getFinishedAt() == null) ticket.setFinishedAt(now);
         }
 
         ticket.setStatus(status);
     }
 
+
     public Page<TicketResponseDto> getAllBusinessTickets(Pageable page) {
-        Long businessId = authService.getLoggedInBusinessId();
+        Long businessId = authService.isSuperAdmin()
+                ? null
+                : authService.getLoggedInBusinessId();
         return mapper.toResponseDtoPage(
-                ticketRepository.findAllByBusinessId(businessId, page));
+                ticketRepository.findAllFilteredByBusiness(businessId, page));
     }
 
     public TicketResponseDto getTicketById(Long id) {
-        Long businessId = authService.getLoggedInBusinessId();
-        Ticket ticket = ticketRepository.findByIdAndBusinessId(id, businessId)
+        Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with this id " + id));
+
+        authService.ensureCanAccess(ticket.getBusiness().getId());
+
         return mapper.toResponseDto(ticket);
     }
 
     public void deleteTicket(Long id) {
-        Long businessId = authService.getLoggedInBusinessId();
-        Ticket ticket = ticketRepository.findByIdAndBusinessId(id, businessId)
+        Ticket ticket = ticketRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with this id " + id));
+
+        authService.ensureCanAccess(ticket.getBusiness().getId());
+
         ticketRepository.delete(ticket);
     }
 }
