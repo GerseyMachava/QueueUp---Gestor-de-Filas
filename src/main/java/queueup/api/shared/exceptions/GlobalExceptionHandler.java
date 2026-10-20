@@ -3,6 +3,8 @@ package queueup.api.shared.exceptions;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
@@ -39,16 +41,24 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                                                 HttpStatus.INTERNAL_SERVER_ERROR,
                                                 exception.getClass().getSimpleName()));
         }
-        /*
-         * @ExceptionHandler(BadCredentialsException.class)
-         * public ResponseEntity<Object> BadCredentialsException(BadCredentialsException
-         * exception) {
-         * return ResponseEntity.status(
-         * HttpStatus.UNAUTHORIZED).body(
-         * ApiResponse.error("Incorrect Credentials.",
-         * HttpStatus.UNAUTHORIZED,
-         * exception.getClass().getSimpleName()));
-         * 
-         * }
-         */
+
+        @ExceptionHandler(BadCredentialsException.class)
+        public ResponseEntity<Object> BadCredentialsException(BadCredentialsException exception) {
+                return ResponseEntity.status(
+                                HttpStatus.UNAUTHORIZED).body(
+                                                ApiResponse.error("Incorrect Credentials.",
+                                                                HttpStatus.UNAUTHORIZED,
+                                                                exception.getClass().getSimpleName()));
+
+        }
+
+        @ExceptionHandler(AuthorizationDeniedException.class)
+        public ResponseEntity<Object> AuthorizationDeniedException(AuthorizationDeniedException exception) {
+                return ResponseEntity.status(
+                                HttpStatus.FORBIDDEN).body(
+                                                ApiResponse.error("Access denied. You do not have permission to access this resource.",
+                                                                HttpStatus.FORBIDDEN,
+                                                                exception.getClass().getSimpleName()));
+        }
+
 }

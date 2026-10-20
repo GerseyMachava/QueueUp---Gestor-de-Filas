@@ -13,9 +13,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import queueup.api.auth.dtos.RegisterRequestDto;
+import queueup.api.auth.dtos.RegisterResponseDto;
 import queueup.api.auth.principal.UserPrincipal;
 import queueup.api.entities.Business;
 import queueup.api.entities.User;
+import queueup.api.entities.enums.Role;
 import queueup.api.repositories.UserRepository;
 import queueup.api.services.BusinessService;
 import queueup.api.shared.exceptions.BusinessException;
@@ -40,14 +42,14 @@ public class AuthService implements UserDetailsService {
 
     public UserPrincipal getCurrentPrincipal() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    if (auth == null) {
-        throw new BusinessException("User not authenticated", HttpStatus.UNAUTHORIZED);
-    }
-    System.out.println("### PRINCIPAL CLASS: " + auth.getPrincipal().getClass().getName());
-    if (!(auth.getPrincipal() instanceof UserPrincipal principal)) {
-        throw new BusinessException("User not authenticated", HttpStatus.UNAUTHORIZED);
-    }
-    return principal;
+        if (auth == null) {
+            throw new BusinessException("User not authenticated", HttpStatus.UNAUTHORIZED);
+        }
+        System.out.println("### PRINCIPAL CLASS: " + auth.getPrincipal().getClass().getName());
+        if (!(auth.getPrincipal() instanceof UserPrincipal principal)) {
+            throw new BusinessException("User not authenticated", HttpStatus.UNAUTHORIZED);
+        }
+        return principal;
     }
 
     public Optional<User> getLoggedInUser() {
@@ -84,12 +86,17 @@ public class AuthService implements UserDetailsService {
         }
     }
 
-    public User registerUser(RegisterRequestDto requestDto) {
+    public RegisterResponseDto registerUser(RegisterRequestDto requestDto) {
         if (userRepository.findByEmail(requestDto.email()) != null) {
             throw new ResourceNotFoundException("User already exists with this email " + requestDto.email());
         }
 
-        Business business = businessService.returnBusinessEntityById(requestDto.businessId());
+        Business business = null;
+        if (requestDto.businessId() != null) {
+            business = businessService.returnBusinessEntityById(requestDto.businessId());
+        } else if (requestDto.role() != Role.SUPER_ADMIN) {
+            throw new BusinessException("Business ID is required for this role");
+        }
         String encryptedPassword = new BCryptPasswordEncoder().encode(requestDto.password());
 
         User newUser = new User(
@@ -98,7 +105,9 @@ public class AuthService implements UserDetailsService {
                 encryptedPassword,
                 requestDto.role(),
                 business, true);
-        return userRepository.save(newUser);
+        userRepository.save(newUser);
+        return new RegisterResponseDto(requestDto.name(), requestDto.email(), requestDto.role().toString(),
+                requestDto.businessId());
     }
 
     public void ensureCanAccess(Long targetBusinessId) {

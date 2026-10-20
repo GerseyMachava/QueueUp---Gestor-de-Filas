@@ -1,7 +1,6 @@
 package queueup.api.services;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +31,9 @@ public class BusinessService {
         }
         if (requestDto.type() == null || requestDto.type().isBlank()) {
             throw new RuntimeException("Business type cannot be empty");
+        }
+        if (businessRepository.existsByNameAndAddressAndContact(requestDto.name(), requestDto.address(), requestDto.contact())) {
+            throw new RuntimeException("Business with the same name, address, and contact already exists");
         }
         try {
             BusinessType.valueOf(requestDto.type().trim().toUpperCase());

@@ -5,6 +5,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -31,6 +32,7 @@ public class BusinessController {
 
     private final BusinessService service;
 
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @GetMapping
     public ResponseEntity<ApiResponse<Page<BusinessResponseDto>>> index(
             @PageableDefault(sort = "name", direction = Sort.Direction.ASC, size = 10) Pageable pageable) {
@@ -39,6 +41,8 @@ public class BusinessController {
         return ResponseEntity.ok(ApiResponse.success(message, businesses, HttpStatus.OK));
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
+
     @PostMapping
     public ResponseEntity<ApiResponse<BusinessResponseDto>> create(
             @Valid @RequestBody BusinessRequestDto requestDto) {
@@ -46,6 +50,7 @@ public class BusinessController {
                 .ok(ApiResponse.success("Business created", service.createBusiness(requestDto), HttpStatus.CREATED));
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<BusinessResponseDto>> update(
             @PathVariable Long id,
@@ -54,12 +59,14 @@ public class BusinessController {
                 .ok(ApiResponse.success("Business updated", service.updateBusiness(requestDto, id), HttpStatus.OK));
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<BusinessResponseDto>> getById(
             @PathVariable Long id) {
         return ResponseEntity.ok(ApiResponse.success("Business fetched", service.getBusinessById(id), HttpStatus.OK));
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id) {
