@@ -3,7 +3,7 @@ package queueup.api.auth.Services;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,11 +13,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import queueup.api.auth.dtos.RegisterRequestDto;
+import queueup.api.auth.principal.UserPrincipal;
 import queueup.api.entities.Business;
 import queueup.api.entities.User;
-import queueup.api.entities.enums.Role;
 import queueup.api.repositories.UserRepository;
 import queueup.api.services.BusinessService;
+import queueup.api.shared.exceptions.BusinessException;
 import queueup.api.shared.exceptions.ResourceNotFoundException;
 
 @Service
@@ -30,49 +31,74 @@ public class AuthService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        return userRepository.findByEmail(username);
+        User user = userRepository.findByEmail(username);
+        if (user == null) {
+            throw new UsernameNotFoundException("User not found: " + username);
+        }
+        return UserPrincipal.from(user);
+    }
+
+    public UserPrincipal getCurrentPrincipal() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    if (auth == null) {
+        throw new BusinessException("User not authenticated", HttpStatus.UNAUTHORIZED);
+    }
+    System.out.println("### PRINCIPAL CLASS: " + auth.getPrincipal().getClass().getName());
+    if (!(auth.getPrincipal() instanceof UserPrincipal principal)) {
+        throw new BusinessException("User not authenticated", HttpStatus.UNAUTHORIZED);
+    }
+    return principal;
     }
 
     public Optional<User> getLoggedInUser() {
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()
-                || authentication instanceof AnonymousAuthenticationToken) {
+        try {
+            UserPrincipal principal = getCurrentPrincipal();
+            return Optional.ofNullable(userRepository.findById(principal.getUserId()).orElse(null));
+        } catch (BusinessException ex) {
             return Optional.empty();
         }
-        return Optional.of((User) authentication.getPrincipal());
+    }
+
+    public Long getLoggedInUserId() {
+        return getCurrentPrincipal().getUserId();
+    }
+
+    public Long getLoggedInBusinessIdOrNull() {
+        return getCurrentPrincipal().getBusinessId();
     }
 
     public Long getLoggedInBusinessId() {
-        Optional<User> loggedInUser = getLoggedInUser();
-        if (loggedInUser.isPresent()) {
-            User user = loggedInUser.get();
-            Business business = user.getBusiness();
-            if (business != null) {
-                return business.getId();
-            }
+        Long businessId = getLoggedInBusinessIdOrNull();
+        if (businessId == null) {
+            throw new BusinessException(
+                    "User has no business assigned", HttpStatus.FORBIDDEN);
         }
-        return null;
+        return businessId;
     }
 
-    public User registeUser(RegisterRequestDto requestDto) {
+    public boolean isSuperAdmin() {
+        try {
+            return getCurrentPrincipal().isSuperAdmin();
+        } catch (BusinessException ex) {
+            return false;
+        }
+    }
+
+    public User registerUser(RegisterRequestDto requestDto) {
         if (userRepository.findByEmail(requestDto.email()) != null) {
-            throw new ResourceNotFoundException("User not found with this email " + requestDto.email());
+            throw new ResourceNotFoundException("User already exists with this email " + requestDto.email());
         }
 
         Business business = businessService.returnBusinessEntityById(requestDto.businessId());
         String encryptedPassword = new BCryptPasswordEncoder().encode(requestDto.password());
 
-        User newUser = new User(requestDto.name(), requestDto.email(), encryptedPassword, requestDto.role(),
-                business);
+        User newUser = new User(
+                requestDto.name(),
+                requestDto.email(),
+                encryptedPassword,
+                requestDto.role(),
+                business, true);
         return userRepository.save(newUser);
-
-    }
-
-    public boolean isSuperAdmin() {
-        return getLoggedInUser()
-                .map(user -> user.getRole() == Role.SUPER_ADMIN)
-                .orElse(false);
     }
 
     public void ensureCanAccess(Long targetBusinessId) {

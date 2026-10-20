@@ -49,7 +49,7 @@ public class TicketMapper {
     public void updateEntityFromRequestDto(TicketRequestDto requestDto, Ticket existingEntity) {
         existingEntity.setCustomerName(requestDto.customerName());
         existingEntity.setCustomerContact(requestDto.customerContact());
-        existingEntity.setPriority(Enum.valueOf(Priority.class, requestDto.priority()));
+        existingEntity.setPriority(EnumUtils.parse(Priority.class, requestDto.priority(), "priority"));
     }
 
     public Page<TicketResponseDto> toResponseDtoPage(Page<Ticket> entityTicket) {

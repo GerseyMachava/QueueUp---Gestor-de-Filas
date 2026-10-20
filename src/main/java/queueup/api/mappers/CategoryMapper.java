@@ -42,8 +42,7 @@ public class CategoryMapper {
 
     public void updateEntityFromRequestDto(CategoryRequestDto requestDto, Category existingEntity, Business business) {
         existingEntity.setName(requestDto.name());
-        ;
-        existingEntity.setDefaultPriority(Enum.valueOf(Priority.class, requestDto.defaultPriority()));
+        existingEntity.setDefaultPriority(EnumUtils.parse(Priority.class, requestDto.defaultPriority(), "defaultPriority"));
         existingEntity.setAverageServiceTimeMinutes(requestDto.averageServiceTimeMinutes());
         existingEntity.setBusiness(business);
         existingEntity.setPrefix(requestDto.prefix());

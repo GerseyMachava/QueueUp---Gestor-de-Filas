@@ -18,10 +18,9 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     boolean existsByNameAndBusinessIdAndIdNot(String name, Long businessId, Long id);
 
-    boolean existsByNameAndBusinessId(Long name, Long businessId);
+    boolean existsByNameAndBusinessId(String name, Long businessId);
 
     boolean existsByPrefixAndBusinessIdAndIdNot(String prefix, Long businessId, Long id);
-    boolean existsByNameAndBusinessId(String name, Long businessId);
     boolean existsByPrefixAndBusinessId(String prefix, Long businessId);
 
     Optional<Category> findByIdAndBusinessId(Long id, Long businessId);

@@ -1,5 +1,6 @@
 package queueup.api.entities;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -46,6 +47,9 @@ public class Ticket extends BaseEntity {
     private LocalDateTime servedAt;
     private LocalDateTime finishedAt;
     private LocalDateTime calledAt;
+
+    @Column(name = "ticket_date", insertable = false, updatable = false)
+    private LocalDate ticketDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id", nullable = false)

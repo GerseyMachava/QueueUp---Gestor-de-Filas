@@ -28,7 +28,7 @@ public class BusinessMapper {
                 .name(requestDto.name())
                 .address(requestDto.address())
                 .contact(requestDto.contact())
-                .type(Enum.valueOf(BusinessType.class, requestDto.type()))
+                .type(Enum.valueOf(BusinessType.class, requestDto.type().trim().toUpperCase()))
                 .build();
 
     }
@@ -37,7 +37,7 @@ public class BusinessMapper {
         existingEntity.setName(requestDto.name());
         existingEntity.setAddress(requestDto.address());
         existingEntity.setContact(requestDto.contact());
-        existingEntity.setType(Enum.valueOf(BusinessType.class, requestDto.type()));
+        existingEntity.setType(Enum.valueOf(BusinessType.class, requestDto.type().trim().toUpperCase()));
     }
 
     public Page<BusinessResponseDto> toResponseDtoPage(Page<Business> entityPage) {

@@ -16,6 +16,7 @@ import queueup.api.auth.Services.TokenService;
 import queueup.api.auth.dtos.AuthRequestDto;
 import queueup.api.auth.dtos.LoginResponseDto;
 import queueup.api.auth.dtos.RegisterRequestDto;
+import queueup.api.auth.principal.UserPrincipal;
 import queueup.api.entities.User;
 import queueup.api.repositories.UserRepository;
 import queueup.api.shared.apiResponse.ApiResponse;
@@ -33,10 +34,15 @@ public class AuthController {
     private AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity login(@RequestBody AuthRequestDto requestDto) {
-        var emailAndPassword = new UsernamePasswordAuthenticationToken(requestDto.email(), requestDto.password());
+    public ResponseEntity<LoginResponseDto> login(@RequestBody AuthRequestDto requestDto) {
+        var emailAndPassword = new UsernamePasswordAuthenticationToken(
+                requestDto.email(), requestDto.password());
+
         var auth = this.authenticationManager.authenticate(emailAndPassword);
-        var token = tokenService.generateToken((User) auth.getPrincipal());
+
+        var principal = (UserPrincipal) auth.getPrincipal();
+        var token = tokenService.generateToken(principal);
+
         return ResponseEntity.ok(new LoginResponseDto(requestDto.email(), token));
     }
 
@@ -44,7 +50,7 @@ public class AuthController {
     public ResponseEntity register(@RequestBody RegisterRequestDto requestDto) {
         System.out.println("Registering user: " + requestDto.name() + ", Email: " + requestDto.email() + ", Role: "
                 + requestDto.role() + ", Business ID: " + requestDto.businessId());
-        return ResponseEntity.ok(authService.registeUser(requestDto));
+        return ResponseEntity.ok(authService.registerUser(requestDto));
     }
 
 }

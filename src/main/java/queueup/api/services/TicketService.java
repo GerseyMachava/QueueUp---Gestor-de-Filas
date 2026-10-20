@@ -4,13 +4,17 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ThreadLocalRandom;
 
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 import queueup.api.auth.Services.AuthService;
 import queueup.api.dtos.requests.TicketRequestDto;
 import queueup.api.dtos.responses.TicketResponseDto;
@@ -24,11 +28,14 @@ import queueup.api.shared.exceptions.BusinessException;
 import queueup.api.shared.exceptions.ResourceNotFoundException;
 import queueup.api.shared.util.EnumUtils;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class TicketService {
 
     private static final String TICKET_NUMBER_FORMAT = "%s%03d";
+    private static final int MAX_RETRIES = 3;
+    private static final long BASE_BACKOFF_MS = 20L;
 
     private static final Map<Status, Set<Status>> ALLOWED_TRANSITIONS = Map.of(
             Status.WAITING, Set.of(Status.CALLED, Status.ABANDONED, Status.NO_SHOW),
@@ -42,26 +49,6 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final CategoryRepository categoryRepository;
     private final TicketMapper mapper;
-
-    private void validateStatusTransition(Ticket existing, String newStatus) {
-        if (newStatus == null || newStatus.isBlank()) {
-            return;
-        }
-        Status current = existing.getStatus();
-        Status next = EnumUtils.parse(Status.class, newStatus, "status");
-
-        if (current == next) {
-            return;
-        }
-
-        Set<Status> allowed = ALLOWED_TRANSITIONS.getOrDefault(current, Set.of());
-        if (!allowed.contains(next)) {
-            throw new BusinessException(
-                    "Invalid status transition: " + current + " → " + next
-                            + ". Allowed from " + current + ": " + allowed,
-                    HttpStatus.BAD_REQUEST);
-        }
-    }
 
     public String generateTicketNumber(Category category) {
         LocalDate today = LocalDate.now();
@@ -80,9 +67,45 @@ public class TicketService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Category not found with this id " + requestDto.categoryId()));
 
+        return tryCreateWithRetry(requestDto, category, 0);
+    }
+
+    private TicketResponseDto tryCreateWithRetry(
+            TicketRequestDto requestDto, Category category, int attempt) {
+
         String ticketNumber = generateTicketNumber(category);
         Ticket ticket = mapper.toEntity(requestDto, category, ticketNumber);
-        return mapper.toResponseDto(ticketRepository.save(ticket));
+
+        try {
+            Ticket saved = ticketRepository.saveAndFlush (ticket);
+            if (attempt > 0) {
+                log.warn("Ticket number collision resolved on attempt {} (categoryId={}, businessId={})",
+                        attempt, category.getId(), category.getBusiness().getId());
+            }
+            return mapper.toResponseDto(saved);
+
+        } catch (DataIntegrityViolationException ex) {
+            if (attempt >= MAX_RETRIES) {
+                log.error("Failed to generate unique ticket number after {} attempts (categoryId={}, businessId={})",
+                        MAX_RETRIES, category.getId(), category.getBusiness().getId(), ex);
+                throw new BusinessException(
+                        "Could not generate a unique ticket number. Please try again.",
+                        HttpStatus.CONFLICT);
+            }
+
+            long backoff = BASE_BACKOFF_MS * (attempt + 1)
+                    + ThreadLocalRandom.current().nextLong(0, BASE_BACKOFF_MS);
+            try {
+                Thread.sleep(backoff);
+            } catch (InterruptedException ie) {
+                Thread.currentThread().interrupt();
+                throw new BusinessException(
+                        "Interrupted while retrying ticket creation",
+                        HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            return tryCreateWithRetry(requestDto, category, attempt + 1);
+        }
     }
 
     public TicketResponseDto updateTicket(TicketRequestDto requestDto, Long id) {
@@ -93,37 +116,34 @@ public class TicketService {
 
         validateStatusTransition(existingTicket, requestDto.status());
 
-        // categoryId do request é ignorado — troca exige cancelar + criar novo ticket
         mapper.updateEntityFromRequestDto(requestDto, existingTicket);
         applyStatusTransition(existingTicket, requestDto.status());
 
         return mapper.toResponseDto(ticketRepository.save(existingTicket));
     }
 
-    public Page<TicketResponseDto> getAllBusinessTickets(Pageable page) {
-        Long businessId = authService.getLoggedInBusinessId();
-        return mapper.toResponseDtoPage(
-                ticketRepository.findAllByBusinessId(businessId, page));
-    }
-
-    public TicketResponseDto getTicketById(Long id) {
-        Long businessId = authService.getLoggedInBusinessId();
-        Ticket ticket = ticketRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with this id " + id));
-        return mapper.toResponseDto(ticket);
-    }
-
-    public void deleteTicket(Long id) {
-        Long businessId = authService.getLoggedInBusinessId();
-        Ticket ticket = ticketRepository.findByIdAndBusinessId(id, businessId)
-                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with this id " + id));
-        ticketRepository.delete(ticket);
-    }
-
-    private void applyStatusTransition(Ticket ticket, String newStatus) {
+    private void validateStatusTransition(Ticket existing, String newStatus) {
         if (newStatus == null || newStatus.isBlank()) {
             return;
         }
+        Status current = existing.getStatus();
+        Status next = EnumUtils.parse(Status.class, newStatus, "status");
+
+        if (current == next)
+            return;
+
+        Set<Status> allowed = ALLOWED_TRANSITIONS.getOrDefault(current, Set.of());
+        if (!allowed.contains(next)) {
+            throw new BusinessException(
+                    "Invalid status transition: " + current + " → " + next
+                            + ". Allowed from " + current + ": " + allowed,
+                    HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void applyStatusTransition(Ticket ticket, String newStatus) {
+        if (newStatus == null || newStatus.isBlank())
+            return;
 
         Status status = EnumUtils.parse(Status.class, newStatus, "status");
         LocalDateTime now = LocalDateTime.now();
@@ -156,5 +176,25 @@ public class TicketService {
         }
 
         ticket.setStatus(status);
+    }
+
+    public Page<TicketResponseDto> getAllBusinessTickets(Pageable page) {
+        Long businessId = authService.getLoggedInBusinessId();
+        return mapper.toResponseDtoPage(
+                ticketRepository.findAllByBusinessId(businessId, page));
+    }
+
+    public TicketResponseDto getTicketById(Long id) {
+        Long businessId = authService.getLoggedInBusinessId();
+        Ticket ticket = ticketRepository.findByIdAndBusinessId(id, businessId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with this id " + id));
+        return mapper.toResponseDto(ticket);
+    }
+
+    public void deleteTicket(Long id) {
+        Long businessId = authService.getLoggedInBusinessId();
+        Ticket ticket = ticketRepository.findByIdAndBusinessId(id, businessId)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found with this id " + id));
+        ticketRepository.delete(ticket);
     }
 }
