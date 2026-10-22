@@ -13,7 +13,6 @@ import com.auth0.jwt.exceptions.JWTCreationException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
 
 import queueup.api.auth.principal.UserPrincipal;
-import queueup.api.entities.User;
 
 @Service
 public class TokenService {

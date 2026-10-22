@@ -32,7 +32,8 @@ public class BusinessService {
         if (requestDto.type() == null || requestDto.type().isBlank()) {
             throw new RuntimeException("Business type cannot be empty");
         }
-        if (businessRepository.existsByNameAndAddressAndContact(requestDto.name(), requestDto.address(), requestDto.contact())) {
+        if (businessRepository.existsByNameAndAddressAndContact(requestDto.name(), requestDto.address(),
+                requestDto.contact())) {
             throw new RuntimeException("Business with the same name, address, and contact already exists");
         }
         try {
@@ -55,9 +56,10 @@ public class BusinessService {
         return mapper.toResponseDto(businessRepository.save(existingBusiness));
     }
 
-    public Page <BusinessResponseDto> getAllBusinesses(Pageable page) {
+    public Page<BusinessResponseDto> getAllBusinesses(Pageable page) {
         return mapper.toResponseDtoPage(businessRepository.findAll(page));
     }
+
     public BusinessResponseDto getBusinessById(Long id) {
         Business business = businessRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("business not found with this id " + id));
@@ -74,4 +76,6 @@ public class BusinessService {
         return businessRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("business not found with this id " + id));
     }
+
+   
 }

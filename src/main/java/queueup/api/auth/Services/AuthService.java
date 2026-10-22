@@ -4,7 +4,6 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,6 +14,7 @@ import org.springframework.stereotype.Service;
 
 import queueup.api.auth.dtos.RegisterRequestDto;
 import queueup.api.auth.dtos.RegisterResponseDto;
+import queueup.api.auth.dtos.UserRespondeDto;
 import queueup.api.auth.principal.UserPrincipal;
 import queueup.api.entities.Business;
 import queueup.api.entities.User;
@@ -116,8 +116,22 @@ public class AuthService implements UserDetailsService {
             return;
         Long current = getLoggedInBusinessId();
         if (!targetBusinessId.equals(current)) {
-            throw new BusinessException("You cannot access or modify the resource of another business", HttpStatus.FORBIDDEN);
+            throw new BusinessException("You cannot access or modify the resource of another business",
+                    HttpStatus.FORBIDDEN);
         }
+    }
+
+    public UserRespondeDto getUserById(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with this id " + id));
+
+        ensureCanAccess(user.getBusiness() != null ? user.getBusiness().getId() : null);
+
+        return new UserRespondeDto(
+                user.getName(),
+                user.getEmail(),
+                user.getRole().toString(),
+                user.getBusiness() != null ? businessService.getBusinessById(user.getBusiness().getId()) : null);
     }
 
 }

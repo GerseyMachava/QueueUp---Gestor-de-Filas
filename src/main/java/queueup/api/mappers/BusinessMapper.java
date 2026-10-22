@@ -29,6 +29,7 @@ public class BusinessMapper {
                 .address(requestDto.address())
                 .contact(requestDto.contact())
                 .type(Enum.valueOf(BusinessType.class, requestDto.type().trim().toUpperCase()))
+                .slug(toSlug(requestDto.name()))
                 .build();
 
     }
@@ -44,4 +45,11 @@ public class BusinessMapper {
         return entityPage.map(this::toResponseDto);
     }
 
+    public static String toSlug(String name) {
+        String uuid = java.util.UUID.randomUUID().toString().substring(0, 6);
+        String base = name.toLowerCase()
+                .replaceAll("[^a-z0-9]+", "-")
+                .replaceAll("^-|-$", "");
+        return base + "-" + uuid;
+    }
 }
