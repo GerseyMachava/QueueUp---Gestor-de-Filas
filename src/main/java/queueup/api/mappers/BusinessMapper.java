@@ -18,7 +18,8 @@ public class BusinessMapper {
                 entity.getId(),
                 entity.getName(),
                 entity.getContact(),
-                entity.getType().toString()
+                entity.getType().toString(),
+                entity.getSlug()
 
         );
     }

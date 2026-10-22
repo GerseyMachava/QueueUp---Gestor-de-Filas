@@ -18,11 +18,13 @@ import queueup.api.auth.dtos.UserRespondeDto;
 import queueup.api.auth.principal.UserPrincipal;
 import queueup.api.entities.Business;
 import queueup.api.entities.User;
+import queueup.api.entities.enums.Priority;
 import queueup.api.entities.enums.Role;
 import queueup.api.repositories.UserRepository;
 import queueup.api.services.BusinessService;
 import queueup.api.shared.exceptions.BusinessException;
 import queueup.api.shared.exceptions.ResourceNotFoundException;
+import queueup.api.shared.util.EnumUtils;
 
 @Service
 public class AuthService implements UserDetailsService {
@@ -95,7 +97,7 @@ public class AuthService implements UserDetailsService {
         if (requestDto.businessId() != null) {
             business = businessService.returnBusinessEntityById(requestDto.businessId());
             ensureCanAccess(business.getId());
-        } else if (requestDto.role() != Role.SUPER_ADMIN) {
+        } else if (requestDto.role() != Role.SUPER_ADMIN.toString()) {
             throw new BusinessException("Business ID is required for this role");
         }
         String encryptedPassword = new BCryptPasswordEncoder().encode(requestDto.password());
@@ -104,7 +106,7 @@ public class AuthService implements UserDetailsService {
                 requestDto.name(),
                 requestDto.email(),
                 encryptedPassword,
-                requestDto.role(),
+               EnumUtils.parse(Role.class, requestDto.role(), "role"),
                 business, true);
         userRepository.save(newUser);
         return new RegisterResponseDto(requestDto.name(), requestDto.email(), requestDto.role().toString(),
