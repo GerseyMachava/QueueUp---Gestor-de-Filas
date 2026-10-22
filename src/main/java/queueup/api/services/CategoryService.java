@@ -2,6 +2,7 @@ package queueup.api.services;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 
 import lombok.AllArgsConstructor;
@@ -49,12 +50,7 @@ public class CategoryService {
     }
 
     public CategoryResponseDto createCategory(CategoryRequestDto requestDto) {
-        if (!authService.isSuperAdmin()) {
-            if (!requestDto.businessId().equals(authService.getLoggedInBusinessId())) {
-                throw new BusinessException(
-                        "You are not authorized to create a category for this business");
-            }
-        }
+        authService.ensureCanAccess(requestDto.businessId());
 
         validateCategory(requestDto, null);
 
@@ -99,7 +95,7 @@ public class CategoryService {
 
     public CategoryResponseDto getCategoryById(Long id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Category not found with this id " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found with the id " + id));
 
         authService.ensureCanAccess(category.getBusiness().getId());
 

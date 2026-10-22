@@ -1,0 +1,2 @@
+ALTER TABLE tickets
+    ADD COLUMN ticket_date DATE GENERATED ALWAYS AS (CAST(created_at AS DATE)) STORED;

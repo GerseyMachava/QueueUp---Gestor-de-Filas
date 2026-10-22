@@ -4,6 +4,7 @@ import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -45,7 +46,6 @@ public class AuthService implements UserDetailsService {
         if (auth == null) {
             throw new BusinessException("User not authenticated", HttpStatus.UNAUTHORIZED);
         }
-        System.out.println("### PRINCIPAL CLASS: " + auth.getPrincipal().getClass().getName());
         if (!(auth.getPrincipal() instanceof UserPrincipal principal)) {
             throw new BusinessException("User not authenticated", HttpStatus.UNAUTHORIZED);
         }
@@ -94,6 +94,7 @@ public class AuthService implements UserDetailsService {
         Business business = null;
         if (requestDto.businessId() != null) {
             business = businessService.returnBusinessEntityById(requestDto.businessId());
+            ensureCanAccess(business.getId());
         } else if (requestDto.role() != Role.SUPER_ADMIN) {
             throw new BusinessException("Business ID is required for this role");
         }
@@ -115,7 +116,7 @@ public class AuthService implements UserDetailsService {
             return;
         Long current = getLoggedInBusinessId();
         if (!targetBusinessId.equals(current)) {
-            throw new ResourceNotFoundException("Resource not found");
+            throw new BusinessException("You cannot access or modify the resource of another business", HttpStatus.FORBIDDEN);
         }
     }
 

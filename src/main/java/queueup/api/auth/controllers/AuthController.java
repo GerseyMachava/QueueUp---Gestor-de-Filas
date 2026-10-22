@@ -55,4 +55,6 @@ public class AuthController {
                 authService.registerUser(requestDto), HttpStatus.CREATED));
     }
 
+    
+
 }

@@ -1,11 +1,11 @@
 package queueup.api.controllers;
 
-
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -38,13 +38,15 @@ public class CategoryController {
         return ResponseEntity.ok(ApiResponse.success(message, categories, HttpStatus.OK));
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ApiResponse<CategoryResponseDto>> create(
-             @Valid @RequestBody CategoryRequestDto requestDto) {
+            @Valid @RequestBody CategoryRequestDto requestDto) {
         return ResponseEntity
                 .ok(ApiResponse.success("Category created", service.createCategory(requestDto), HttpStatus.CREATED));
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<ApiResponse<CategoryResponseDto>> update(
             @PathVariable Long id,
@@ -59,6 +61,7 @@ public class CategoryController {
         return ResponseEntity.ok(ApiResponse.success("Category fetched", service.getCategoryById(id), HttpStatus.OK));
     }
 
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id) {
