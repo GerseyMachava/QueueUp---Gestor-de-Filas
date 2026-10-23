@@ -2,22 +2,26 @@ package queueup.api.services;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import queueup.api.auth.Services.AuthService;
 import queueup.api.dtos.requests.TicketRequestDto;
 import queueup.api.dtos.responses.TicketResponseDto;
+import queueup.api.dtos.responses.PublicTicketStatusDto;
 import queueup.api.entities.Category;
 import queueup.api.entities.Ticket;
 import queueup.api.entities.enums.Status;
@@ -49,7 +53,6 @@ public class TicketService {
     private final TicketRepository ticketRepository;
     private final CategoryRepository categoryRepository;
     private final TicketMapper mapper;
-
 
     public String generateTicketNumber(Category category) {
         LocalDate today = LocalDate.now();
@@ -123,12 +126,14 @@ public class TicketService {
     }
 
     private void validateStatusTransition(Ticket existing, String newStatus) {
-        if (newStatus == null || newStatus.isBlank()) return;
+        if (newStatus == null || newStatus.isBlank())
+            return;
 
         Status current = existing.getStatus();
         Status next = EnumUtils.parse(Status.class, newStatus, "status");
 
-        if (current == next) return;
+        if (current == next)
+            return;
 
         Set<Status> allowed = ALLOWED_TRANSITIONS.getOrDefault(current, Set.of());
         if (!allowed.contains(next)) {
@@ -140,7 +145,8 @@ public class TicketService {
     }
 
     private void applyStatusTransition(Ticket ticket, String newStatus) {
-        if (newStatus == null || newStatus.isBlank()) return;
+        if (newStatus == null || newStatus.isBlank())
+            return;
 
         Status status = EnumUtils.parse(Status.class, newStatus, "status");
         LocalDateTime now = LocalDateTime.now();
@@ -152,22 +158,61 @@ public class TicketService {
         } else if (status == Status.CALLED) {
             ticket.setServedAt(null);
             ticket.setFinishedAt(null);
-            if (ticket.getCalledAt() == null) ticket.setCalledAt(now);
+            if (ticket.getCalledAt() == null)
+                ticket.setCalledAt(now);
         } else if (status == Status.IN_SERVICE) {
             ticket.setFinishedAt(null);
-            if (ticket.getCalledAt() == null) ticket.setCalledAt(now);
-            if (ticket.getServedAt() == null) ticket.setServedAt(now);
+            if (ticket.getCalledAt() == null)
+                ticket.setCalledAt(now);
+            if (ticket.getServedAt() == null)
+                ticket.setServedAt(now);
         } else if (status == Status.COMPLETED) {
-            if (ticket.getCalledAt() == null) ticket.setCalledAt(now);
-            if (ticket.getServedAt() == null) ticket.setServedAt(now);
-            if (ticket.getFinishedAt() == null) ticket.setFinishedAt(now);
+            if (ticket.getCalledAt() == null)
+                ticket.setCalledAt(now);
+            if (ticket.getServedAt() == null)
+                ticket.setServedAt(now);
+            if (ticket.getFinishedAt() == null)
+                ticket.setFinishedAt(now);
         } else if (status == Status.ABANDONED || status == Status.NO_SHOW) {
-            if (ticket.getFinishedAt() == null) ticket.setFinishedAt(now);
+            if (ticket.getFinishedAt() == null)
+                ticket.setFinishedAt(now);
         }
 
         ticket.setStatus(status);
     }
 
+    @Transactional
+    public TicketResponseDto callNext(Long categoryId) {
+        Long businessId = authService.isSuperAdmin()
+                ? null
+                : authService.getLoggedInBusinessId();
+
+        if (businessId == null) {
+            throw new BusinessException(
+                    "SUPER_ADMIN must specify ?businessId",
+                    HttpStatus.BAD_REQUEST);
+        }
+
+        // se veio categoria, valida acesso
+        if (categoryId != null) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Category not found: " + categoryId));
+            authService.ensureCanAccess(category.getBusiness().getId());
+        }
+
+        List<Ticket> next = ticketRepository.findNextWaiting(
+                businessId, categoryId, PageRequest.of(0, 1));
+
+        if (next.isEmpty()) {
+            throw new BusinessException("No waiting tickets", HttpStatus.NOT_FOUND);
+        }
+
+        Ticket ticket = next.get(0);
+        applyStatusTransition(ticket, "CALLED");
+
+        return mapper.toResponseDto(ticketRepository.save(ticket));
+    }
 
     public Page<TicketResponseDto> getAllBusinessTickets(Pageable page) {
         Long businessId = authService.isSuperAdmin()
@@ -193,5 +238,38 @@ public class TicketService {
         authService.ensureCanAccess(ticket.getBusiness().getId());
 
         ticketRepository.delete(ticket);
+    }
+
+    public PublicTicketStatusDto getPublicStatus(String businessSlug, String ticketNumber) {
+        Ticket ticket = ticketRepository.findByTicketNumberAndBusinessSlug(ticketNumber, businessSlug)
+                .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
+
+        long position = 0;
+        Integer estimatedWaitMinutes = null;
+
+        if (ticket.getStatus() == Status.WAITING) {
+            position = ticketRepository.countWaitingTicketsAheadOf(ticket.getId()) + 1;
+            estimatedWaitMinutes = (int) (position * ticket.getCategory().getAverageServiceTimeMinutes());
+        }
+
+        return new PublicTicketStatusDto(
+                ticket.getTicketNumber(),
+                maskName(ticket.getCustomerName()),
+                ticket.getCategory().getName(),
+                ticket.getStatus().name(),
+                position,
+                estimatedWaitMinutes,
+                ticket.getCalledAt(),
+                ticket.getServedAt(),
+                ticket.getFinishedAt());
+    }
+
+    private String maskName(String name) {
+        if (name == null || name.isBlank())
+            return "";
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1)
+            return parts[0];
+        return parts[0] + " " + parts[parts.length - 1].charAt(0) + ".";
     }
 }

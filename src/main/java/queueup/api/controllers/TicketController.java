@@ -13,7 +13,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import queueup.api.dtos.responses.PublicTicketStatusDto;
 
 import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
@@ -58,10 +60,28 @@ public class TicketController {
         return ResponseEntity.ok(ApiResponse.success("Ticket fetched", service.getTicketById(id), HttpStatus.OK));
     }
 
+    @PostMapping("/api/queue/next")
+    public ResponseEntity<ApiResponse<TicketResponseDto>> callNext(
+            @RequestParam(required = false) Long categoryId) {
+        return ResponseEntity.ok(
+                ApiResponse.success("Next ticket called",
+                        service.callNext(categoryId), HttpStatus.OK));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<?>> delete(
             @PathVariable Long id) {
         service.deleteTicket(id);
         return ResponseEntity.ok(ApiResponse.success("Ticket deleted", "", HttpStatus.OK));
+    }
+
+    @GetMapping("/{businessSlug}/queue/{ticketNumber}")
+    public ResponseEntity<ApiResponse<PublicTicketStatusDto>> getStatus(
+            @PathVariable String businessSlug,
+            @PathVariable String ticketNumber) {
+        return ResponseEntity.ok(
+                ApiResponse.success("Ticket status",
+                        service.getPublicStatus(businessSlug, ticketNumber),
+                        HttpStatus.OK));
     }
 }

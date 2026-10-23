@@ -12,4 +12,5 @@ public interface BusinessRepository extends JpaRepository<Business, Long> {
 
     Optional<Business> findBySlug(String slug);
 
+
 }

@@ -5,11 +5,13 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import jakarta.persistence.LockModeType;
 import queueup.api.entities.Ticket;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
@@ -66,4 +68,29 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 			""")
 	Page<Ticket> findAllFilteredByBusiness(@Param("businessId") Long businessId, Pageable pageable);
 
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("""
+			SELECT t FROM Ticket t
+			WHERE t.business.id = :businessId
+			    AND (:categoryId IS NULL OR t.category.id = :categoryId)
+			    AND t.status = queueup.api.entities.enums.Status.WAITING
+			ORDER BY CASE
+			        WHEN t.priority = queueup.api.entities.enums.Priority.PRIORITY THEN 0
+			        ELSE 1
+			    END,
+			    t.createdAt ASC
+			""")
+	List<Ticket> findNextWaiting(
+			@Param("businessId") Long businessId,
+			@Param("categoryId") Long categoryId,
+			Pageable pageable);
+
+	@Query("""
+			SELECT t FROM Ticket t
+			WHERE t.ticketNumber = :ticketNumber
+			    AND t.business.slug = :slug
+			""")
+	Optional<Ticket> findByTicketNumberAndBusinessSlug(
+			@Param("ticketNumber") String ticketNumber,
+			@Param("slug") String slug);
 }
