@@ -18,7 +18,6 @@ import queueup.api.auth.dtos.UserRespondeDto;
 import queueup.api.auth.principal.UserPrincipal;
 import queueup.api.entities.Business;
 import queueup.api.entities.User;
-import queueup.api.entities.enums.Priority;
 import queueup.api.entities.enums.Role;
 import queueup.api.repositories.UserRepository;
 import queueup.api.services.BusinessService;

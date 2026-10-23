@@ -11,6 +11,7 @@ import queueup.api.entities.Business;
 import queueup.api.entities.enums.BusinessType;
 import queueup.api.mappers.BusinessMapper;
 import queueup.api.repositories.BusinessRepository;
+import queueup.api.shared.exceptions.BusinessException;
 
 @Service
 @AllArgsConstructor
@@ -21,25 +22,25 @@ public class BusinessService {
 
     private void validateBusiness(BusinessRequestDto requestDto) {
         if (requestDto == null) {
-            throw new RuntimeException("Business request cannot be null");
+            throw new BusinessException("Business request cannot be null");
         }
         if (requestDto.name() == null || requestDto.name().isBlank()) {
-            throw new RuntimeException("Business name cannot be empty");
+            throw new BusinessException("Business name cannot be empty");
         }
         if (requestDto.contact() == null || requestDto.contact().isBlank()) {
-            throw new RuntimeException("Business contact cannot be empty");
+            throw new BusinessException("Business contact cannot be empty");
         }
         if (requestDto.type() == null || requestDto.type().isBlank()) {
-            throw new RuntimeException("Business type cannot be empty");
+            throw new BusinessException("Business type cannot be empty");
         }
         if (businessRepository.existsByNameAndAddressAndContact(requestDto.name(), requestDto.address(),
                 requestDto.contact())) {
-            throw new RuntimeException("Business with the same name, address, and contact already exists");
+            throw new BusinessException("Business with the same name, address, and contact already exists");
         }
         try {
-            BusinessType.valueOf(requestDto.type().trim().toUpperCase());
+            Enum.valueOf(BusinessType.class, requestDto.type().trim().toUpperCase());
         } catch (IllegalArgumentException ex) {
-            throw new RuntimeException("Invalid business type: " + requestDto.type());
+            throw new BusinessException("Invalid business type: " + requestDto.type());
         }
     }
 
@@ -77,5 +78,4 @@ public class BusinessService {
                 .orElseThrow(() -> new RuntimeException("business not found with this id " + id));
     }
 
-   
 }
