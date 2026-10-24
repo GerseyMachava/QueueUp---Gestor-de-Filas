@@ -1,6 +1,7 @@
 package queueup.api.repositories;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,20 +14,29 @@ import org.springframework.data.repository.query.Param;
 
 import jakarta.persistence.LockModeType;
 import queueup.api.entities.Ticket;
+import queueup.api.entities.enums.Priority;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
 	@Query("""
-			SELECT t FROM Ticket t
+			SELECT COUNT(t) FROM Ticket t
 			WHERE t.business.id = :businessId
 				AND t.category.id = :categoryId
 				AND t.status = queueup.api.entities.enums.Status.WAITING
-			ORDER BY CASE
-					WHEN t.priority = queueup.api.entities.enums.Priority.PRIORITY THEN 0
-					ELSE 1
-			END, t.createdAt ASC
+				AND (
+					(t.priority = queueup.api.entities.enums.Priority.PRIORITY
+						AND :priority = queueup.api.entities.enums.Priority.NORMAL)
+					OR (t.priority = :priority
+						AND (t.createdAt < :createdAt
+							OR (t.createdAt = :createdAt AND t.id < :ticketId)))
+				)
 			""")
-	long countWaitingTicketsAheadOf(@Param("ticketId") Long ticketId);
+	long countWaitingTicketsAheadOf(
+			@Param("businessId") Long businessId,
+			@Param("categoryId") Long categoryId,
+			@Param("priority") Priority priority,
+			@Param("createdAt") LocalDateTime createdAt,
+			@Param("ticketId") Long ticketId);
 
 	@Query("""
 			SELECT t FROM Ticket t
@@ -36,7 +46,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 			ORDER BY CASE
 					WHEN t.priority = queueup.api.entities.enums.Priority.PRIORITY THEN 0
 					ELSE 1
-			END, t.createdAt ASC
+			END, t.createdAt ASC, t.id ASC
 			""")
 	List<Ticket> findNextWaitingTicketByBusinessAndCategory(
 			@Param("businessId") Long businessId,
@@ -78,7 +88,8 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 			        WHEN t.priority = queueup.api.entities.enums.Priority.PRIORITY THEN 0
 			        ELSE 1
 			    END,
-			    t.createdAt ASC
+			    t.createdAt ASC,
+			    t.id ASC
 			""")
 	List<Ticket> findNextWaiting(
 			@Param("businessId") Long businessId,
@@ -93,4 +104,13 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 	Optional<Ticket> findByTicketNumberAndBusinessSlug(
 			@Param("ticketNumber") String ticketNumber,
 			@Param("slug") String slug);
+
+	@Query("""
+			SELECT t FROM Ticket t
+			WHERE t.publicCode = :publicCode
+				AND t.business.slug = :slug
+				""")
+	Optional<Ticket> findByPublicCodeAndBusinessSlug(@Param("publicCode") String publicCode,
+			@Param("slug") String slug);
+
 }

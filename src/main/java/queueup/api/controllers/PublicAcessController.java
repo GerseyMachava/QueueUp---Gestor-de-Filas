@@ -19,13 +19,14 @@ public class PublicAcessController {
 
     private final TicketService service;
 
-    @GetMapping("/{businessSlug}/queue/{ticketNumber}")
+    @GetMapping("/{businessSlug}/queue/{publicCode}")
     public ResponseEntity<ApiResponse<PublicTicketStatusDto>> getStatus(
             @PathVariable String businessSlug,
-            @PathVariable String ticketNumber) {
+            @PathVariable String publicCode) {
         return ResponseEntity.ok(
-                ApiResponse.success("Ticket status",
-                        service.getPublicStatus(businessSlug, ticketNumber),
+                ApiResponse.success(
+                        "Ticket status",
+                        service.getPublicStatus(businessSlug, publicCode),
                         HttpStatus.OK));
     }
 }

@@ -240,15 +240,20 @@ public class TicketService {
         ticketRepository.delete(ticket);
     }
 
-    public PublicTicketStatusDto getPublicStatus(String businessSlug, String ticketNumber) {
-        Ticket ticket = ticketRepository.findByTicketNumberAndBusinessSlug(ticketNumber, businessSlug)
+    public PublicTicketStatusDto getPublicStatus(String businessSlug, String publicCode) {
+        Ticket ticket = ticketRepository.findByPublicCodeAndBusinessSlug(publicCode, businessSlug)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));
 
         long position = 0;
         Integer estimatedWaitMinutes = null;
 
         if (ticket.getStatus() == Status.WAITING) {
-            position = ticketRepository.countWaitingTicketsAheadOf(ticket.getId()) + 1;
+            position = ticketRepository.countWaitingTicketsAheadOf(
+                    ticket.getBusiness().getId(),
+                    ticket.getCategory().getId(),
+                    ticket.getPriority(),
+                    ticket.getCreatedAt(),
+                    ticket.getId()) + 1;
             estimatedWaitMinutes = (int) (position * ticket.getCategory().getAverageServiceTimeMinutes());
         }
 

@@ -44,6 +44,8 @@ public class Ticket extends BaseEntity {
     @Column(nullable = false)
     private Status status;
 
+    @Column(name = "public_code", nullable = false, unique = true, length = 8)
+    private String publicCode;
     private LocalDateTime servedAt;
     private LocalDateTime finishedAt;
     private LocalDateTime calledAt;
