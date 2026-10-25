@@ -1,5 +1,6 @@
 package queueup.api.dtos.responses;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 public record PublicTicketStatusDto(
@@ -9,9 +10,9 @@ public record PublicTicketStatusDto(
     String status,
     long positionInQueue,
     Integer estimatedWaitingTime,
-    LocalDateTime calledAt,
-    LocalDateTime servedAt,
-    LocalDateTime finishedAts
+    Instant calledAt,
+    Instant servedAt,
+    Instant finishedAts
 ) {
 
 }

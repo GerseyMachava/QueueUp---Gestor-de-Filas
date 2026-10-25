@@ -1,5 +1,6 @@
 package queueup.api.dtos.responses;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 
 public record TicketResponseDto(
@@ -9,10 +10,10 @@ public record TicketResponseDto(
         String customerContact,
         String priority,
         String status,
-        LocalDateTime calledAt,
-        LocalDateTime servedAt,
-        LocalDateTime finishedAt,
-        LocalDateTime createdAt,
+        Instant calledAt,
+        Instant servedAt,
+        Instant finishedAt,
+        Instant createdAt,
         Long businessId,
         Long categoryId,
         String categoryName) {

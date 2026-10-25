@@ -1,6 +1,6 @@
 package queueup.api.auth.dtos;
 
-import queueup.api.dtos.responses.BusinessResponseDto;;
+import queueup.api.dtos.responses.BusinessResponseDto;
 
 public record UserRespondeDto(
         String name,

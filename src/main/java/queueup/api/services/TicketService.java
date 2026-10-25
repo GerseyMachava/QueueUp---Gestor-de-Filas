@@ -1,5 +1,6 @@
 package queueup.api.services;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -149,7 +150,7 @@ public class TicketService {
             return;
 
         Status status = EnumUtils.parse(Status.class, newStatus, "status");
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
 
         if (status == Status.WAITING) {
             ticket.setCalledAt(null);
@@ -179,39 +180,6 @@ public class TicketService {
         }
 
         ticket.setStatus(status);
-    }
-
-    @Transactional
-    public TicketResponseDto callNext(Long categoryId) {
-        Long businessId = authService.isSuperAdmin()
-                ? null
-                : authService.getLoggedInBusinessId();
-
-        if (businessId == null) {
-            throw new BusinessException(
-                    "SUPER_ADMIN must specify ?businessId",
-                    HttpStatus.BAD_REQUEST);
-        }
-
-        // se veio categoria, valida acesso
-        if (categoryId != null) {
-            Category category = categoryRepository.findById(categoryId)
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Category not found: " + categoryId));
-            authService.ensureCanAccess(category.getBusiness().getId());
-        }
-
-        List<Ticket> next = ticketRepository.findNextWaiting(
-                businessId, categoryId, PageRequest.of(0, 1));
-
-        if (next.isEmpty()) {
-            throw new BusinessException("No waiting tickets", HttpStatus.NOT_FOUND);
-        }
-
-        Ticket ticket = next.get(0);
-        applyStatusTransition(ticket, "CALLED");
-
-        return mapper.toResponseDto(ticketRepository.save(ticket));
     }
 
     public Page<TicketResponseDto> getAllBusinessTickets(Pageable page) {
@@ -276,5 +244,31 @@ public class TicketService {
         if (parts.length == 1)
             return parts[0];
         return parts[0] + " " + parts[parts.length - 1].charAt(0) + ".";
+    }
+
+    @Transactional
+    public TicketResponseDto callNext(Long categoryId) {
+        if (authService.isSuperAdmin()) {
+            throw new BusinessException("Super Admin cannot call tickets", HttpStatus.FORBIDDEN);
+        }
+
+        Long businessId = authService.getLoggedInBusinessId();
+        if (categoryId != null) {
+            Category category = categoryRepository.findById(categoryId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Category not found with this id " + categoryId));
+            authService.ensureCanAccess(category.getBusiness().getId());
+        }
+
+        List<Ticket> next = ticketRepository.findNextWaiting(businessId, categoryId, PageRequest.of(0, 1));
+
+        if (next.isEmpty()) {
+            log.warn("No waiting tickets (businessId={}, categoryId={})", businessId, categoryId);
+
+            throw new BusinessException("No waiting tickets in this queue", HttpStatus.NO_CONTENT);
+        }
+
+        Ticket ticket = next.get(0);
+        applyStatusTransition(ticket, Status.CALLED.name());
+        return mapper.toResponseDto(ticketRepository.save(ticket));
     }
 }

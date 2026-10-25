@@ -1,0 +1,1 @@
+ALTER TABLE tickets MODIFY called_at TIMESTAMP NULL;

@@ -1,5 +1,6 @@
 package queueup.api.repositories;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -35,7 +36,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 			@Param("businessId") Long businessId,
 			@Param("categoryId") Long categoryId,
 			@Param("priority") Priority priority,
-			@Param("createdAt") LocalDateTime createdAt,
+			@Param("createdAt") Instant createdAt,
 			@Param("ticketId") Long ticketId);
 
 	@Query("""
