@@ -2,7 +2,6 @@ package queueup.api.repositories;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +15,7 @@ import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
 import queueup.api.entities.Ticket;
 import queueup.api.entities.enums.Priority;
+import queueup.api.entities.enums.Status;
 
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
@@ -114,4 +114,76 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 	Optional<Ticket> findByPublicCodeAndBusinessSlug(@Param("publicCode") String publicCode,
 			@Param("slug") String slug);
 
+
+
+
+
+@Query("""
+    SELECT COUNT(t) FROM Ticket t
+    WHERE t.business.id = :businessId
+      AND t.status = :status
+      AND t.finishedAt >= :start
+      AND t.finishedAt <  :end
+    """)
+long countByBusinessAndStatusAndFinishedAtBetween(
+        @Param("businessId") Long businessId,
+        @Param("status") Status status,
+        @Param("start") Instant start,
+        @Param("end") Instant end);
+
+long countByBusinessIdAndStatus(Long businessId, Status status);
+
+@Query(value = """
+    SELECT AVG(TIMESTAMPDIFF(MINUTE, created_at, called_at))
+    FROM tickets
+    WHERE business_id = :businessId
+      AND called_at IS NOT NULL
+      AND created_at >= :start
+      AND created_at <  :end
+    """, nativeQuery = true)
+Double avgWaitTimeMinutes(
+        @Param("businessId") Long businessId,
+        @Param("start") Instant start,
+        @Param("end") Instant end);
+
+@Query(value = """
+    SELECT
+        c.id, c.name, COUNT(t.id),
+        AVG(TIMESTAMPDIFF(MINUTE, t.created_at, t.called_at))
+    FROM tickets t
+    JOIN categories c ON c.id = t.category_id
+    WHERE t.business_id = :businessId
+      AND t.status = 'COMPLETED'
+      AND t.finished_at >= :start
+      AND t.finished_at <  :end
+    GROUP BY c.id, c.name
+    """, nativeQuery = true)
+List<Object[]> getCategoryMetricsRaw(
+        @Param("businessId") Long businessId,
+        @Param("start") Instant start,
+        @Param("end") Instant end);
+
+@Query("""
+    SELECT SUM(CASE WHEN t.status = :abandonedStatus THEN 1 ELSE 0 END) * 100.0 / COUNT(t)
+    FROM Ticket t
+    WHERE t.business.id = :businessId
+      AND t.createdAt >= :start
+      AND t.createdAt <  :end
+    """)
+Double abandonmentRate(
+        @Param("businessId") Long businessId,
+        @Param("abandonedStatus") Status abandonedStatus,
+        @Param("start") Instant start,
+        @Param("end") Instant end);
+
+@Query("""
+    SELECT COUNT(t) FROM Ticket t
+    WHERE t.business.id = :businessId
+      AND t.createdAt >= :start
+      AND t.createdAt <  :end
+    """)
+long countByBusinessAndCreatedAtBetween(
+        @Param("businessId") Long businessId,
+        @Param("start") Instant start,
+        @Param("end") Instant end);
 }
