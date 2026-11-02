@@ -15,9 +15,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import jakarta.transaction.Transactional;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.transaction.annotation.Transactional;
 
 import queueup.api.auth.Services.AuthService;
 import queueup.api.dtos.requests.TicketRequestDto;
@@ -208,6 +208,7 @@ public class TicketService {
         ticketRepository.delete(ticket);
     }
 
+    @Transactional(readOnly = true)
     public PublicTicketStatusDto getPublicStatus(String businessSlug, String publicCode) {
         Ticket ticket = ticketRepository.findByPublicCodeAndBusinessSlug(publicCode, businessSlug)
                 .orElseThrow(() -> new ResourceNotFoundException("Ticket not found"));

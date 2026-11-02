@@ -37,8 +37,8 @@ public class CategoryController {
         String message = categories.isEmpty() ? "No categories found" : "categories fetched";
         return ResponseEntity.ok(ApiResponse.success(message, categories, HttpStatus.OK));
     }
-
     @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('ADMIN')")
+
     @PostMapping
     public ResponseEntity<ApiResponse<CategoryResponseDto>> create(
             @Valid @RequestBody CategoryRequestDto requestDto) {

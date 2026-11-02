@@ -17,7 +17,6 @@ import queueup.api.auth.dtos.LoginResponseDto;
 import queueup.api.auth.dtos.RegisterRequestDto;
 import queueup.api.auth.dtos.RegisterResponseDto;
 import queueup.api.auth.principal.UserPrincipal;
-import queueup.api.repositories.UserRepository;
 import queueup.api.shared.apiResponse.ApiResponse;
 
 @RestController
@@ -25,8 +24,6 @@ import queueup.api.shared.apiResponse.ApiResponse;
 public class AuthController {
     @Autowired
     private AuthenticationManager authenticationManager;
-    @Autowired
-    private UserRepository userRepository;
     @Autowired
     private TokenService tokenService;
     @Autowired
