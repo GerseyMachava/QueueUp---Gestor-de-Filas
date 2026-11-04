@@ -1,6 +1,7 @@
 package queueup.api.entities;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import jakarta.persistence.Column;
@@ -43,9 +44,14 @@ public class Ticket extends BaseEntity {
     @Column(nullable = false)
     private Status status;
 
-    private LocalDateTime servedAt;
-    private LocalDateTime finishedAt;
-    private LocalDateTime calledAt;
+    @Column(name = "public_code", nullable = false, unique = true, length = 8)
+    private String publicCode;
+    private Instant  servedAt;
+    private Instant  finishedAt;
+    private Instant  calledAt;
+
+    @Column(name = "ticket_date", insertable = false, updatable = false)
+    private LocalDate ticketDate;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "business_id", nullable = false)

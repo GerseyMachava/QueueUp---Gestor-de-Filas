@@ -31,6 +31,7 @@ public class Notification extends BaseEntity {
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
     private Channel channel;
+    @Column(name = "delivery_status", nullable = false)
     @Enumerated(EnumType.STRING)
     private DeliveryStatus status;
     private LocalDateTime sentAt;

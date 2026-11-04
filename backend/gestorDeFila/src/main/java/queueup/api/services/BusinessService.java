@@ -1,7 +1,6 @@
 package queueup.api.services;
 
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -9,8 +8,10 @@ import lombok.AllArgsConstructor;
 import queueup.api.dtos.requests.BusinessRequestDto;
 import queueup.api.dtos.responses.BusinessResponseDto;
 import queueup.api.entities.Business;
+import queueup.api.entities.enums.BusinessType;
 import queueup.api.mappers.BusinessMapper;
 import queueup.api.repositories.BusinessRepository;
+import queueup.api.shared.exceptions.BusinessException;
 
 @Service
 @AllArgsConstructor
@@ -19,9 +20,28 @@ public class BusinessService {
     private final BusinessRepository businessRepository;
     private final BusinessMapper mapper;
 
-    // TODO
     private void validateBusiness(BusinessRequestDto requestDto) {
-
+        if (requestDto == null) {
+            throw new BusinessException("Business request cannot be null");
+        }
+        if (requestDto.name() == null || requestDto.name().isBlank()) {
+            throw new BusinessException("Business name cannot be empty");
+        }
+        if (requestDto.contact() == null || requestDto.contact().isBlank()) {
+            throw new BusinessException("Business contact cannot be empty");
+        }
+        if (requestDto.type() == null || requestDto.type().isBlank()) {
+            throw new BusinessException("Business type cannot be empty");
+        }
+        if (businessRepository.existsByNameAndAddressAndContact(requestDto.name(), requestDto.address(),
+                requestDto.contact())) {
+            throw new BusinessException("Business with the same name, address, and contact already exists");
+        }
+        try {
+            Enum.valueOf(BusinessType.class, requestDto.type().trim().toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            throw new BusinessException("Invalid business type: " + requestDto.type());
+        }
     }
 
     public BusinessResponseDto createBusiness(BusinessRequestDto requestDto) {
@@ -37,9 +57,10 @@ public class BusinessService {
         return mapper.toResponseDto(businessRepository.save(existingBusiness));
     }
 
-    public Page <BusinessResponseDto> getAllBusinesses(Pageable page) {
+    public Page<BusinessResponseDto> getAllBusinesses(Pageable page) {
         return mapper.toResponseDtoPage(businessRepository.findAll(page));
     }
+
     public BusinessResponseDto getBusinessById(Long id) {
         Business business = businessRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("business not found with this id " + id));
@@ -51,9 +72,11 @@ public class BusinessService {
                 .orElseThrow(() -> new RuntimeException("business not found with this id " + id));
         businessRepository.delete(business);
     }
+    
 
-    protected Business returnBusinessEntityById(Long id) {
+    public Business returnBusinessEntityById(Long id) {
         return businessRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("business not found with this id " + id));
     }
+
 }

@@ -1,13 +1,5 @@
 package queueup.api.entities;
 
-import java.util.Collection;
-import java.util.List;
-
-import org.jspecify.annotations.Nullable;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,7 +23,7 @@ import queueup.api.entities.enums.Role;
 @Setter
 @Table(name = "users")
 @SuperBuilder
-public class User extends BaseEntity implements UserDetails {
+public class User extends BaseEntity {
     @Column(nullable = false)
     private String name;
     @Column(nullable = false, unique = true)
@@ -43,27 +35,11 @@ public class User extends BaseEntity implements UserDetails {
     private Role role;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "business_id", nullable = false)
+    @JoinColumn(name = "business_id", nullable = true)
     private Business business;
 
-    @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() {
-        if (this.role == Role.ADMIN) {
-            return List.of(new SimpleGrantedAuthority("ROLE_ADMIN"), new SimpleGrantedAuthority("ROLE_ATTENDANT"));
-        } else {
-            return List.of(new SimpleGrantedAuthority("Role_USER"));
-        }
-    }
-
-    @Override
-    public @Nullable String getPassword() {
-        return this.passwordHash;
-    }
-
-    @Override
-    public String getUsername() {
-        return this.email;
-    }
+    @Column(nullable = false)
+    private boolean enabled = true;
 
     public User(String name, String email, String passwordHash, Role role) {
         this.email = email;

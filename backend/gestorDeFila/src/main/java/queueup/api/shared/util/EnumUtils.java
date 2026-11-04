@@ -13,8 +13,10 @@ public final class EnumUtils {
         if (value == null || value.isBlank()) {
             throw new BusinessException(fieldName + " can not be null", HttpStatus.BAD_REQUEST);
         }
+
+        String normalizedValue = value.trim();
         try {
-            return Enum.valueOf(enumClass, value.toUpperCase());
+            return Enum.valueOf(enumClass, normalizedValue.toUpperCase());
         } catch (IllegalArgumentException ex) {
             throw new BusinessException(
                     "Invalid " + fieldName + ": '" + value + "'. Allowed values: " + allowedValues(enumClass),

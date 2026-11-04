@@ -12,6 +12,7 @@ import queueup.api.entities.Ticket;
 import queueup.api.entities.enums.Priority;
 import queueup.api.entities.enums.Status;
 import queueup.api.shared.util.EnumUtils;
+import queueup.api.shared.util.PublicCodeGenerator;
 
 @Component
 @AllArgsConstructor
@@ -37,6 +38,7 @@ public class TicketMapper {
     public Ticket toEntity(TicketRequestDto requestDto, Category category, String ticketNumber) {
         return Ticket.builder()
                 .ticketNumber(ticketNumber)
+                .publicCode(PublicCodeGenerator.generate())
                 .customerName(requestDto.customerName())
                 .customerContact(requestDto.customerContact())
                 .priority(EnumUtils.parse(Priority.class, requestDto.priority(), "priority"))
@@ -49,7 +51,7 @@ public class TicketMapper {
     public void updateEntityFromRequestDto(TicketRequestDto requestDto, Ticket existingEntity) {
         existingEntity.setCustomerName(requestDto.customerName());
         existingEntity.setCustomerContact(requestDto.customerContact());
-        existingEntity.setPriority(Enum.valueOf(Priority.class, requestDto.priority()));
+        existingEntity.setPriority(EnumUtils.parse(Priority.class, requestDto.priority(), "priority"));
     }
 
     public Page<TicketResponseDto> toResponseDtoPage(Page<Ticket> entityTicket) {

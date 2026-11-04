@@ -34,6 +34,9 @@ public class Business extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private BusinessType type;
 
+    @Column(nullable = false, unique = true, length = 100)
+    private String slug;
+
     @OneToMany(mappedBy = "business")
     private List<User> users;
     @OneToMany(mappedBy = "business")

@@ -2,12 +2,9 @@ package QueeUp.gestorDeFila;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
-import org.springframework.scheduling.annotation.EnableScheduling;
+import queueup.api.GestorDeFilaApplication;
 
-@SpringBootTest
-@EnableJpaAuditing
-@EnableScheduling
+@SpringBootTest(classes = GestorDeFilaApplication.class)
 class GestorDeFilaApplicationTests {
 
 	@Test
