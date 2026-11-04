@@ -13,13 +13,11 @@ class ApiClient {
             headers.Authorization = `Bearer ${token}`;
         }
 
-        // URL corrigida sem quebras de linha indesejadas
         const response = await fetch(`${API_URL}${path}`, {
             ...options,
             headers
         });
 
-        // Tenta converter para JSON, mas lida caso a resposta venha vazia (ex: status 204 No Content)
         let data = null;
         const contentType = response.headers.get("content-type");
         if (contentType && contentType.includes("application/json")) {
@@ -30,10 +28,9 @@ class ApiClient {
             throw new Error(data?.message || `Erro HTTP: ${response.status}`);
         }
 
-        return data; // Retorna os dados da resposta com sucesso!
+        return data; 
     }
 
-    // Métodos auxiliares organizados dentro da classe
     get(path) {
         return this.request(path, { method: "GET" });
     }
@@ -57,7 +54,6 @@ class ApiClient {
     }
 }
 
-// Funções de Gerenciamento de Token
 export function setToken(token) {
     localStorage.setItem("token", token);
 }
@@ -75,5 +71,4 @@ export function clearToken() {
     window.location.href = "../login.html";
 }
 
-// Exporta uma única instância pronta para uso na aplicação inteira
 export const api = new ApiClient();

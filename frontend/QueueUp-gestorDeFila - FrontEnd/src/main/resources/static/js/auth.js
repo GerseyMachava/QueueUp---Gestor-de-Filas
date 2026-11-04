@@ -1,30 +1,36 @@
-import { clearToken } from "./api.js";
+import { api, setToken, clearToken, isAuthenticated } from './api.js';
 
 async function login(email, password) {
-    const res = await fetch(
-        "http://localhost:8080/api/auth/login",
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({ email, password })
+    try {
+        const response = await api.post("/auth/login", { email, password });
+        
+
+        const token = response.token || response.data?.token;
+        
+        if (token) {
+            setToken(token);
+            window.location.href = "../dashboard.html"; 
+        } else {
+            throw new Error("Token não encontrado na resposta do servidor.");
         }
-    );
-
-    if (!res.ok) {
-        throw new Error(`HTTP ${res.status}`);
+    } catch (error) {
+        console.error("Erro ao tentar fazer login:", error.message || error);
+        alert("Falha no login. Verifique suas credenciais.");
     }
-
-    const responseData = await res.json();
-
-    localStorage.setItem(
-        "token",
-        responseData.data.token
-    );
 }
 
 function logout() {
-    clearToken();
+    clearToken(); 
 }
 
+function requireAuth() {
+    if (!isAuthenticated()) {
+        window.location.href = "../login.html";
+    }
+}
+
+function redirectIfAuthenticated() {
+    if (isAuthenticated()) {
+        window.location.href = "../dashboard.html";
+    }
+}
