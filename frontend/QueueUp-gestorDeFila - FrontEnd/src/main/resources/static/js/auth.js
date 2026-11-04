@@ -1,26 +1,23 @@
 import { api, setToken, clearToken, isAuthenticated } from './api.js';
 
-async function login(email, password) {
+export async function login(email, password) {
     try {
         const response = await api.post("/auth/login", { email, password });
-        
-
         const token = response.token || response.data?.token;
-        
+
         if (token) {
             setToken(token);
-            window.location.href = "../dashboard.html"; 
+            window.location.href = "../dashboard.html";
         } else {
-            throw new Error("Token não encontrado na resposta do servidor.");
+            throw new Error("Token não retornado pelo servidor.");
         }
     } catch (error) {
-        console.error("Erro ao tentar fazer login:", error.message || error);
-        alert("Falha no login. Verifique suas credenciais.");
+        throw new Error(error.message || "Credenciais inválidas.");
     }
 }
 
-function logout() {
-    clearToken(); 
+export function logout() {
+    clearToken();
 }
 
 function requireAuth() {
@@ -29,7 +26,7 @@ function requireAuth() {
     }
 }
 
-function redirectIfAuthenticated() {
+export function redirectIfAuthenticated() {
     if (isAuthenticated()) {
         window.location.href = "../dashboard.html";
     }
