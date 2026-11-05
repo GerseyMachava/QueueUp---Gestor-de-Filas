@@ -182,6 +182,7 @@ public class TicketService {
         ticket.setStatus(status);
     }
 
+    @Transactional(readOnly = true)
     public Page<TicketResponseDto> getAllBusinessTickets(Pageable page) {
         Long businessId = authService.isSuperAdmin()
                 ? null

@@ -20,7 +20,7 @@ export function logout() {
     clearToken();
 }
 
-function requireAuth() {
+export function requireAuth() {
     if (!isAuthenticated()) {
         window.location.href = "login.html";
     }
