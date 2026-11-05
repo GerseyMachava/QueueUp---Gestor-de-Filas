@@ -1,8 +1,10 @@
 const API_URL = "http://localhost:8080/api";
 
+localStorage.removeItem("token");
+
 class ApiClient {
     async request(path, options = {}) {
-        const token = localStorage.getItem("token");
+        const token = sessionStorage.getItem("token");
 
         const headers = {
             "Content-Type": "application/json",
@@ -28,7 +30,7 @@ class ApiClient {
             throw new Error(data?.message || `Erro HTTP: ${response.status}`);
         }
 
-        return data; 
+        return data;
     }
 
     get(path) {
@@ -55,20 +57,20 @@ class ApiClient {
 }
 
 export function setToken(token) {
-    localStorage.setItem("token", token);
+    sessionStorage.setItem("token", token);
 }
 
 export function getToken() {
-    return localStorage.getItem("token");
+    return sessionStorage.getItem("token");
 }
 
 export function isAuthenticated() {
-    return !!localStorage.getItem("token");
+    return !!sessionStorage.getItem("token");
 }
 
 export function clearToken() {
-    localStorage.removeItem("token");
-    window.location.href = "../login.html";
+    sessionStorage.removeItem("token");
+    window.location.href = "login.html";
 }
 
 export const api = new ApiClient();

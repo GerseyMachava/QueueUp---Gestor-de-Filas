@@ -7,7 +7,7 @@ export async function login(email, password) {
 
         if (token) {
             setToken(token);
-            window.location.href = "../dashboard.html";
+            window.location.href = "dashboard.html";
         } else {
             throw new Error("Token não retornado pelo servidor.");
         }
@@ -22,12 +22,12 @@ export function logout() {
 
 function requireAuth() {
     if (!isAuthenticated()) {
-        window.location.href = "../login.html";
+        window.location.href = "login.html";
     }
 }
 
 export function redirectIfAuthenticated() {
     if (isAuthenticated()) {
-        window.location.href = "../dashboard.html";
+        window.location.href = "dashboard.html";
     }
 }

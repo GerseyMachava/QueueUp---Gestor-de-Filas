@@ -28,7 +28,7 @@ async function handleSubmit(event) {
 
     try {
         await login(email, password);
-        
+
 
     } catch (error) {
         console.error("Erro ao tentar fazer login:", error);
@@ -52,4 +52,6 @@ function clearError() {
     }
 }
 
+
 document.addEventListener("DOMContentLoaded", init);
+
