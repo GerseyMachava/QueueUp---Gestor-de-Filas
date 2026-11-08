@@ -3,6 +3,7 @@ package queueup.api.controllers;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -29,6 +30,13 @@ public class QueueController {
         TicketResponseDto ticket = ticketService.callNext(categoryId);
         return ResponseEntity.ok(
                 ApiResponse.success("Next Ticket called", ticket, HttpStatus.OK));
+    }
+
+    @GetMapping("/getCurrentTicket")
+    public ResponseEntity<ApiResponse<TicketResponseDto>> getCurrentTicket() {
+        TicketResponseDto CurrentTicket = ticketService.findCurrentCalledTicket();
+        return ResponseEntity.ok(
+                ApiResponse.success("Ticket Fetched", CurrentTicket, HttpStatus.OK));
     }
 
 }

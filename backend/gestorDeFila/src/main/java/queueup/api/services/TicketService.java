@@ -273,4 +273,11 @@ public class TicketService {
         applyStatusTransition(ticket, Status.CALLED.name());
         return mapper.toResponseDto(ticketRepository.save(ticket));
     }
+
+    @Transactional 
+    public TicketResponseDto findCurrentCalledTicket() {
+        Ticket currentCalledTicket = ticketRepository.findByStatus(Status.CALLED)
+                .orElseThrow(() -> new BusinessException("No called tickets in this queue", HttpStatus.NO_CONTENT));
+        return mapper.toResponseDto(currentCalledTicket);
+    }
 }

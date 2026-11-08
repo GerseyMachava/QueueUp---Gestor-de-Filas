@@ -1,12 +1,14 @@
 import { requireAuth, logout } from './auth.js';
 import { api } from './api.js';
+let pollingInterval = null;
 function init() {
     requireAuth();
     loadQueue();
     handleCallNext();
     handleLogout();
     startPolling();
-    
+    renderCurrentCalledTicket();
+
 }
 
 
@@ -20,8 +22,11 @@ async function loadQueue() {
 
 
     } catch (error) {
-        console.error(error.message);
-        liElement.innerHTML = "<li style='color:red'>Error while fetching data</li>";
+        console.error("Erro ao carregar a fila:", error.message);
+        const queueListElement = document.getElementById("queue-list");
+        if (queueListElement) {
+            queueListElement.innerHTML = "<li style='color:red'>Erro ao carregar os dados da fila.</li>";
+        }
     }
 
 }
@@ -43,16 +48,6 @@ function renderQueue(tickets) {
         liElement.appendChild(li);
     })
 }
-
-function renderTickets(ticket) {
-
-    //Cria um <li> com ticketNumber, customerName, priority. Usa textContent (não innerHTML)
-    const liElement = document.getElementById("queue-list");
-    const li = document.createElement("li");
-    li.textContent = ticket.customerName + " - " + ticket.ticketNumber + " - " + ticket.priority;
-    liElement.appendChild(li);
-}
-
 function handleCallNext() {
     //api.post('/queue/next'), chama renderCurrentTicket(ticket), recarrega fila. Em erro (fila vazia), mostra alerta
     const liElement = document.getElementById("call-next-btn");
@@ -61,7 +56,7 @@ function handleCallNext() {
             const apiResponse = await api.post('/queue/next');
             const ticket = apiResponse.data;
             console.log(ticket);
-            renderCurrentTicket(ticket);
+            renderCalledtTicket(ticket);
             loadQueue();
         } catch (error) {
             console.error(error.message);
@@ -73,10 +68,20 @@ function handleCallNext() {
 }
 
 
-function renderCurrentTicket(ticket) {
+function renderCalledtTicket(ticket) {
     //Mostra o ticket chamado no #current-ticket (destaque grande)
     const currentTicketElement = document.getElementById("current-ticket");
     currentTicketElement.textContent = ticket.customerName + " - " + ticket.ticketNumber + " - " + ticket.priority;
+}
+async function renderCurrentCalledTicket() {
+    try {
+        const apiResponse = await api.get('/queue/getCurrentTicket');
+        const calledTicket = apiResponse.data;
+        renderCalledtTicket(calledTicket);
+    } catch (error) {
+        console.error(error.message);
+        alert("Fila vazia. Nenhum ticket para chamar.");
+    }
 }
 
 function handleLogout() {
@@ -88,10 +93,13 @@ function handleLogout() {
 }
 
 function startPolling() {
-    setInterval(loadQueue, 5000)
+    pollingInterval = setInterval(loadQueue, 5000);
 }
 
 function stopPolling() {
-    clearInterval()
+    if (pollingInterval) {
+        clearInterval(pollingInterval);
+        pollingInterval = null;
+    }
 }
 document.addEventListener("DOMContentLoaded", init);

@@ -4,7 +4,7 @@ import { redirectIfAuthenticated, login } from './auth.js';
 function init() {
     redirectIfAuthenticated();
 
-    // Adiciona o listener no formulário de login (certifique-se que seu <form id="login-form"> existe no HTML)
+    // Adiciona o listener no formulário de login
     const form = document.getElementById("login-form");
     if (form) {
         form.addEventListener("submit", handleSubmit);
