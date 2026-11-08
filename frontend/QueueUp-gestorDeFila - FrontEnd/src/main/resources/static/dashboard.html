@@ -1,12 +1,27 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QueAPP</title>
+    <title>QueueUp — Atendente</title>
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
+
 <body>
-    <h1>DashBoard</h1>
+    <div id="panel-screen" class=" flex flex-col items-center justify-center min-h-screen bg-gray-100">
+        <header>
+            <h1>QueueUp</h1>
+            <button id="logout-btn">Sair</button>
+        </header>
+        <main>
+            <button id="call-next-btn">Chamar próximo</button>
+            <div class="bg-blue-500 text-white p-4 rounded-lg shadow-md" id="current-ticket"></div>
+            <h2>Fila</h2>
+            <ul id="queue-list"></ul>
+        </main>
+    </div>
+
+
+    <script type="module" src="js/dashboard.js" ></script>
 </body>
-<script type="module" src="js/dashboard.js"></script>
-</html>
