@@ -2,7 +2,7 @@ package queueup.api.dtos.responses;
 
 public record NextCalledTickets(
     String ticketNumber,
-    String customerNamedMasked,
+    String customerNameMasked,
     String status,
     int positionInQueue
 ) {

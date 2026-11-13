@@ -45,7 +45,7 @@ public class TicketService {
 
     private static final Map<Status, Set<Status>> ALLOWED_TRANSITIONS = Map.of(
             Status.WAITING, Set.of(Status.CALLED, Status.ABANDONED, Status.NO_SHOW),
-            Status.CALLED, Set.of(Status.IN_SERVICE, Status.WAITING, Status.ABANDONED, Status.NO_SHOW),
+            Status.CALLED, Set.of(Status.IN_SERVICE, Status.WAITING, Status.COMPLETED, Status.ABANDONED, Status.NO_SHOW),
             Status.IN_SERVICE, Set.of(Status.COMPLETED, Status.ABANDONED),
             Status.COMPLETED, Set.of(),
             Status.ABANDONED, Set.of(),
@@ -252,6 +252,12 @@ public class TicketService {
 
             throw new BusinessException("No waiting tickets in this queue", HttpStatus.NO_CONTENT);
         }
+
+        List<Ticket> currentlyCalled = ticketRepository.findCalledTickets(businessId, categoryId);
+        for (Ticket calledTicket : currentlyCalled) {
+            applyStatusTransition(calledTicket, Status.COMPLETED.name());
+        }
+        ticketRepository.saveAll(currentlyCalled);
 
         Ticket ticket = next.get(0);
         applyStatusTransition(ticket, Status.CALLED.name());

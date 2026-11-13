@@ -97,6 +97,17 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 			@Param("categoryId") Long categoryId,
 			Pageable pageable);
 
+	@Lock(LockModeType.PESSIMISTIC_WRITE)
+	@Query("""
+			SELECT t FROM Ticket t
+			WHERE t.business.id = :businessId
+			    AND (:categoryId IS NULL OR t.category.id = :categoryId)
+			    AND t.status = queueup.api.entities.enums.Status.CALLED
+			""")
+	List<Ticket> findCalledTickets(
+			@Param("businessId") Long businessId,
+			@Param("categoryId") Long categoryId);
+
 	@Query("""
 			SELECT t FROM Ticket t
 			WHERE t.ticketNumber = :ticketNumber

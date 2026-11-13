@@ -1,8 +1,9 @@
 import { api } from './api.js'
 //Lê slug da URL (?slug=bobs-burgers) ou hardcoded, chama loadCurrent(), inicia polling
+let pollingInterval;
 function init() {
     loadCurrent();
-    startPolling()
+    //startPolling()
 }
 
 //api.get('/public/{slug}/queue/current') (sem token — endpoint público), chama render()
@@ -44,15 +45,13 @@ function renderNext(ticketData) {
         return
     } return waitingTicketsList.forEach(ticket => {
         const li = document.createElement("li");
-        li.textContent = ticket.ticketNumber + " - " + ticket.customerNamedMasked + " - " + ticket.status;
+        li.textContent = ticket.ticketNumber + " - " + ticket.customerNameMasked + " - " + ticket.status;
         liElement.appendChild(li);
     })
 }
-//setInterval(loadCurrent, 5000)
 function startPolling() {
-    pollingInterval = setInterval(loadQueue, 5000);
+    pollingInterval = setInterval(loadCurrent, 5000);
 }
-
 
 
 document.addEventListener("DOMContentLoaded", init);

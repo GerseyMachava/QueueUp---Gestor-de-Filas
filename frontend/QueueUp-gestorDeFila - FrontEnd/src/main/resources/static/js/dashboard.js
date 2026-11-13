@@ -4,11 +4,10 @@ let pollingInterval = null;
 function init() {
     requireAuth();
     loadQueue();
+    loadCurrentCalledTicket();
     handleCallNext();
     handleLogout();
     startPolling();
-    renderCurrentCalledTicket();
-
 }
 
 
@@ -33,55 +32,64 @@ async function loadQueue() {
 
 function renderQueue(tickets) {
     //Limpa #queue-list, se vazio mostra "Nenhum cliente aguardando", senão cria li pra cada ticket
-    const liElement = document.getElementById("queue-list");
-    liElement.innerHTML = "";
+    const queueListElement = document.getElementById("queue-list");
+    if (!queueListElement) return;
+    queueListElement.innerHTML = "";
 
 
     if (!tickets || tickets.length === 0) {
-        liElement.innerHTML = "<li>Nenhum tickt listado</li>";
+        queueListElement.innerHTML = "<li>Nenhum ticket na lista de espera</li>";
 
         return
     }
-    return tickets.forEach(ticket => {
+    tickets.forEach(ticket => {
         const li = document.createElement("li");
         li.textContent = ticket.customerName + " - " + ticket.ticketNumber + " - " + ticket.priority;
-        liElement.appendChild(li);
+        queueListElement.appendChild(li);
     })
 }
 function handleCallNext() {
-    //api.post('/queue/next'), chama renderCurrentTicket(ticket), recarrega fila. Em erro (fila vazia), mostra alerta
-    const liElement = document.getElementById("call-next-btn");
-    liElement.addEventListener("click", async () => {
+    const callNextBtn = document.getElementById("call-next-btn");
+    if (!callNextBtn) return;
+    callNextBtn.addEventListener("click", async () => {
         try {
             const apiResponse = await api.post('/queue/next');
             const ticket = apiResponse.data;
-            renderCalledtTicket(ticket);
+
+            renderCurrentCalledtDisplay(ticket);
             loadQueue();
         } catch (error) {
-            console.error(error.message);
-            alert("Fila vazia. Nenhum ticket para chamar.");
+            console.error("Error ao chamar proximo", error.message);
+            alert("fila vazia. Nenhum Ticket para chamar");
 
         }
-    })
+    });
 
 }
-
-
-function renderCalledtTicket(ticket) {
-    //Mostra o ticket chamado no #current-ticket (destaque grande)
-    const currentTicketElement = document.getElementById("current-ticket");
-    currentTicketElement.textContent = ticket.customerName + " - " + ticket.ticketNumber + " - " + ticket.priority;
-}
-async function renderCurrentCalledTicket() {
+async function getCurrentCalledTicket() {
     try {
         const apiResponse = await api.get('/queue/getCurrentTicket');
-        const calledTicket = apiResponse.data;
-        renderCalledtTicket(calledTicket);
+        return apiResponse.data
     } catch (error) {
-        console.error(error.message);
-        alert("Fila vazia. Nenhum ticket para chamar.");
+        console.error("Nenhum ticket chamado no momento", error.message);
+        return null
     }
 }
+async function loadCurrentCalledTicket() {
+    const currentTicket = await getCurrentCalledTicket();
+    renderCurrentTicketDisplay(currentTicket);
+}
+function renderCurrentTicketDisplay(ticket) {
+    const currentTicketElement = document.getElementById("current-ticket");
+    if (!currentTicketElement) return;
+    if (!ticket) {
+        currentTicketElement.textContent = "Nenhum ticket chamado";
+        return;
+    }
+
+    currentTicketElement.textContent = `${ticket.customerName} - ${ticket.ticketNumber} - ${ticket.priority}`;
+}
+
 
 function handleLogout() {
     const logoutButton = document.getElementById("logout-btn");
