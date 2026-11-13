@@ -55,7 +55,6 @@ function handleCallNext() {
         try {
             const apiResponse = await api.post('/queue/next');
             const ticket = apiResponse.data;
-            console.log(ticket);
             renderCalledtTicket(ticket);
             loadQueue();
         } catch (error) {
