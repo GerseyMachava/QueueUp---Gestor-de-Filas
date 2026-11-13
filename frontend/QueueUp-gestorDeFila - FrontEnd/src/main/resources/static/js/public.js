@@ -10,9 +10,8 @@ function init() {
 async function loadCurrent() {
     try {
         const slug = new URLSearchParams(window.location.search).get('slug') || 'default-slug';
-        const apiResponse = await api.get(`/public/bim-2/queue/current`);
+        const apiResponse = await api.get(`/public/${slug}/queue/current`);
         const ticketData = apiResponse.data;
-        console.log(ticketData);
         render(ticketData);
     } catch (error) {
         console.error('Error loading current ticket:', error);

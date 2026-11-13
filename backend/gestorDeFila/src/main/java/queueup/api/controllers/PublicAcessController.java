@@ -20,7 +20,7 @@ public class PublicAcessController {
 
     private final TicketService service;
 
-    @GetMapping("/{businessSlug}/queue/{publicCode}")
+    @GetMapping("/{businessSlug}/queue/consult/{publicCode}")
     public ResponseEntity<ApiResponse<PublicTicketStatusDto>> getStatus(
             @PathVariable String businessSlug,
             @PathVariable String publicCode) {
