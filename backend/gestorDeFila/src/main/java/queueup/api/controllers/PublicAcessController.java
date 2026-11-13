@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import lombok.AllArgsConstructor;
+import queueup.api.dtos.responses.PublicDashboardResponse;
 import queueup.api.dtos.responses.PublicTicketStatusDto;
 import queueup.api.services.TicketService;
 import queueup.api.shared.apiResponse.ApiResponse;
@@ -29,4 +30,15 @@ public class PublicAcessController {
                         service.getPublicStatus(businessSlug, publicCode),
                         HttpStatus.OK));
     }
+
+    @GetMapping("/{slug}/queue/current")
+    public ResponseEntity<ApiResponse<PublicDashboardResponse>> getCurrentCalledTicket(
+            @PathVariable String slug) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Current called ticket",
+                        service.getPublicDashboardTicket(slug),
+                        HttpStatus.OK));
+    }
+
 }

@@ -110,9 +110,21 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 			SELECT t FROM Ticket t
 			WHERE t.publicCode = :publicCode
 				AND t.business.slug = :slug
-				""")
+			""")
 	Optional<Ticket> findByPublicCodeAndBusinessSlug(@Param("publicCode") String publicCode,
 			@Param("slug") String slug);
+
+	Optional<Ticket> findFirstByBusinessSlugAndStatusOrderByCalledAtDesc(String slug, Status status);
+
+	@Query("""
+			SELECT t
+			FROM Ticket t
+			WHERE t.business.slug = :slug
+			AND status = queueup.api.entities.enums.Status.WAITING or status = queueup.api.entities.enums.Status.IN_SERVICE
+			ORDER BY t.createdAt ASC
+			LIMIT 6
+			""")
+	List<Ticket> findMostRecentTicketsfrombusinessSlug(String slug);
 
 	@Query("""
 			SELECT COUNT(t) FROM Ticket t

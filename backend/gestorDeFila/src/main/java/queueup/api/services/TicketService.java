@@ -2,7 +2,6 @@ package queueup.api.services;
 
 import java.time.Instant;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 import queueup.api.auth.Services.AuthService;
 import queueup.api.dtos.requests.TicketRequestDto;
 import queueup.api.dtos.responses.TicketResponseDto;
+import queueup.api.dtos.responses.CurrentCalledTicket;
+import queueup.api.dtos.responses.PublicDashboardResponse;
 import queueup.api.dtos.responses.PublicTicketStatusDto;
 import queueup.api.entities.Category;
 import queueup.api.entities.Ticket;
@@ -227,25 +228,8 @@ public class TicketService {
             estimatedWaitMinutes = (int) (position * ticket.getCategory().getAverageServiceTimeMinutes());
         }
 
-        return new PublicTicketStatusDto(
-                ticket.getTicketNumber(),
-                maskName(ticket.getCustomerName()),
-                ticket.getCategory().getName(),
-                ticket.getStatus().name(),
-                position,
-                estimatedWaitMinutes,
-                ticket.getCalledAt(),
-                ticket.getServedAt(),
-                ticket.getFinishedAt());
-    }
+        return mapper.toPublicTicketStatusDto(ticket, estimatedWaitMinutes, position);
 
-    private String maskName(String name) {
-        if (name == null || name.isBlank())
-            return "";
-        String[] parts = name.trim().split("\\s+");
-        if (parts.length == 1)
-            return parts[0];
-        return parts[0] + " " + parts[parts.length - 1].charAt(0) + ".";
     }
 
     @Transactional
@@ -274,10 +258,20 @@ public class TicketService {
         return mapper.toResponseDto(ticketRepository.save(ticket));
     }
 
-    @Transactional 
+    @Transactional
     public TicketResponseDto findCurrentCalledTicket() {
         Ticket currentCalledTicket = ticketRepository.findByStatus(Status.CALLED)
                 .orElseThrow(() -> new BusinessException("No called tickets in this queue", HttpStatus.NO_CONTENT));
         return mapper.toResponseDto(currentCalledTicket);
+    }
+
+    @Transactional(readOnly = true)
+    public PublicDashboardResponse getPublicDashboardTicket(String businessSlug) {
+        Ticket ticket = ticketRepository.findFirstByBusinessSlugAndStatusOrderByCalledAtDesc(
+                businessSlug, Status.CALLED)
+                .orElseThrow(() -> new BusinessException("No called tickets in this queue", HttpStatus.NO_CONTENT));
+        List<Ticket> nextCalledTickets = ticketRepository.findMostRecentTicketsfrombusinessSlug(businessSlug);
+
+        return mapper.toPublicDashboardResponse(ticket, nextCalledTickets);
     }
 }
